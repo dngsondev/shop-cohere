@@ -1,0 +1,23 @@
+.scroll-text {
+    display: inline-block;
+    width: 200px; /* Adjust this width to the container's size */
+    overflow: hidden;
+    position: relative;
+    white-space: nowrap;
+  }
+  
+  .scroll-text span {
+    display: inline-block;
+    animation: scrollText 10s linear infinite;
+    font-weight: bold; /* Optional: You can adjust this as needed */
+  }
+  
+  @keyframes scrollText {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  

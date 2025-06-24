@@ -1,0 +1,288 @@
+.suggestionContainer {
+    position: relative;
+    padding: 6px 8px;
+    margin: 2px 8px;
+    opacity: 0;
+    transform: translateY(10px);
+
+    &.visible {
+        opacity: 1;
+        transform: translateY(0);
+        animation: slideInFromBottom 0.3s ease-out;
+    }
+}
+
+.suggestionScrollContainer {
+    position: relative;
+    overflow: hidden; // Ẩn overflow để tạo hiệu ứng smooth
+    padding: 2px 0;
+    mask-image: linear-gradient(90deg,
+            transparent 0%,
+            black 5%,
+            black 95%,
+            transparent 100%); // Tạo fade effect ở 2 đầu
+}
+
+.suggestionItemsContainer {
+    display: flex;
+    gap: 8px;
+    padding: 1px;
+    min-width: fit-content;
+    animation: autoScroll 20s linear infinite; // Animation tự động
+
+    &:hover {
+        animation-play-state: paused; // Dừng khi hover
+    }
+}
+
+.suggestionItem {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px; // Tăng padding để chứa text đầy đủ
+    background: #fafbfc;
+    border: 1px solid #e8edf3;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap; // Không wrap text
+    font-size: 11px;
+    font-weight: 400;
+    color: #64748b;
+    min-width: fit-content;
+    flex-shrink: 0; // Không co lại
+
+    &:hover {
+        background: #f1f5f9;
+        color: #475569;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(71, 85, 105, 0.08);
+
+        .suggestionIcon {
+            color: #64748b;
+        }
+    }
+
+    &:active {
+        transform: translateY(0);
+        background: #e2e8f0;
+    }
+
+    // Responsive
+    @media (min-width: 1200px) {
+        padding: 3px 8px;
+        font-size: 10px;
+        border-radius: 10px;
+        gap: 3px;
+    }
+
+    @media (min-width: 1440px) {
+        padding: 2px 6px;
+        font-size: 9px;
+        border-radius: 8px;
+    }
+}
+
+.suggestionIcon {
+    font-size: 8px;
+    color: #94a3b8;
+    transition: color 0.15s ease;
+    flex-shrink: 0;
+
+    @media (min-width: 1200px) {
+        font-size: 7px;
+    }
+
+    @media (min-width: 1440px) {
+        font-size: 6px;
+    }
+}
+
+.suggestionText {
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    font-size: 1rem;
+    // Bỏ max-width để hiển thị full text
+}
+
+// Animation tự động scroll qua lại
+@keyframes autoScroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-20%);
+    }
+
+    50% {
+        transform: translateX(-40%);
+    }
+
+    75% {
+        transform: translateX(-20%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+// Animation cho container có nhiều items
+.suggestionItemsContainer.manyItems {
+    animation: autoScrollLong 30s linear infinite;
+}
+
+@keyframes autoScrollLong {
+    0% {
+        transform: translateX(10%);
+    }
+
+    20% {
+        transform: translateX(-10%);
+    }
+
+    40% {
+        transform: translateX(-30%);
+    }
+
+    60% {
+        transform: translateX(-50%);
+    }
+
+    80% {
+        transform: translateX(-30%);
+    }
+
+    100% {
+        transform: translateX(10%);
+    }
+}
+
+// Loading states
+.suggestionLoading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.loadingDots {
+    display: inline-flex;
+    gap: 1px;
+    margin-left: 4px;
+
+    span {
+        width: 2px;
+        height: 2px;
+        background: #cbd5e1;
+        border-radius: 50%;
+        animation: loadingBounce 1.4s infinite both;
+
+        &:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        &:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        &:nth-child(3) {
+            animation-delay: 0s;
+        }
+    }
+}
+
+.loadingText {
+    font-style: italic;
+    color: #94a3b8;
+}
+
+// Animations
+@keyframes slideInFromBottom {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes loadingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+// Mobile responsive
+@media (max-width: 640px) {
+    .suggestionContainer {
+        padding: 4px 6px;
+        margin: 2px 6px;
+    }
+
+    .suggestionItem {
+        padding: 4px 8px;
+        font-size: 10px;
+        gap: 3px;
+        border-radius: 10px;
+    }
+
+    .suggestionIcon {
+        font-size: 7px;
+    }
+
+    .suggestionItemsContainer {
+        animation: autoScrollMobile 25s linear infinite;
+    }
+}
+
+@keyframes autoScrollMobile {
+    0% {
+        transform: translateX(5%);
+    }
+
+    25% {
+        transform: translateX(-15%);
+    }
+
+    50% {
+        transform: translateX(-35%);
+    }
+
+    75% {
+        transform: translateX(-15%);
+    }
+
+    100% {
+        transform: translateX(5%);
+    }
+}
+
+// Tablet
+@media (min-width: 641px) and (max-width: 1199px) {
+    .suggestionItem {
+        padding: 4px 9px;
+        font-size: 10px;
+        gap: 3px;
+    }
+
+    .suggestionIcon {
+        font-size: 7px;
+    }
+}

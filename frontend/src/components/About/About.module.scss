@@ -1,0 +1,684 @@
+.aboutWrapper {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+    scroll-behavior: smooth;
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+.container::before {
+    content: '';
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 70px);
+    background-image:
+        radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.15), transparent),
+        radial-gradient(1px 1px at 40px 70px, rgba(255, 255, 255, 0.1), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.08), transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.12), transparent);
+    background-repeat: repeat;
+    background-size: 150px 150px;
+    animation: stars 60s linear infinite;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes stars {
+    0% {
+        transform: translateX(0) translateY(0);
+    }
+
+    100% {
+        transform: translateX(-150px) translateY(-150px);
+    }
+}
+
+.floatingIcon {
+    position: fixed;
+    font-size: 1.8rem;
+    color: rgba(255, 255, 255, 0.1);
+    animation: floatIcon 12s ease-in-out infinite;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.icon1 {
+    top: 20%;
+    left: 8%;
+    animation-delay: 0s;
+}
+
+.icon2 {
+    top: 30%;
+    right: 12%;
+    animation-delay: 2s;
+}
+
+.icon3 {
+    bottom: 30%;
+    left: 12%;
+    animation-delay: 4s;
+}
+
+.icon4 {
+    bottom: 20%;
+    right: 8%;
+    animation-delay: 1s;
+}
+
+.icon5 {
+    top: 60%;
+    left: 3%;
+    animation-delay: 3s;
+}
+
+.icon6 {
+    top: 70%;
+    right: 3%;
+    animation-delay: 5s;
+}
+
+.icon7 {
+    top: 45%;
+    left: 50%;
+    animation-delay: 6s;
+}
+
+.icon8 {
+    bottom: 45%;
+    right: 25%;
+    animation-delay: 7s;
+}
+
+@keyframes floatIcon {
+
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg) scale(1);
+        opacity: 0.1;
+    }
+
+    25% {
+        transform: translateY(-20px) rotate(90deg) scale(1.1);
+        opacity: 0.2;
+    }
+
+    50% {
+        transform: translateY(0px) rotate(180deg) scale(1);
+        opacity: 0.1;
+    }
+
+    75% {
+        transform: translateY(-10px) rotate(270deg) scale(1.05);
+        opacity: 0.15;
+    }
+}
+
+/* Hero Section - Cải thiện */
+.heroSection {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 3;
+    padding: 0 2rem;
+}
+
+.heroContent {
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #00d4ff, #5b73ff, #ff006e, #06ffa5);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: cosmicGlow 8s ease-in-out infinite;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.subtitle {
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    animation: fadeInUp 1.5s ease-out 0.5s both;
+}
+
+@keyframes cosmicGlow {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sections - Layout chuyên nghiệp */
+section {
+    padding: 5rem 0;
+    position: relative;
+    z-index: 3;
+}
+
+.sectionContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.content {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.content:hover {
+    transform: translateY(-5px);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sectionTitle {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #00d4ff, #5b73ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.01em;
+}
+
+/* About Grid - Cải thiện layout */
+.aboutGrid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 3rem;
+    align-items: start;
+    margin-top: 2rem;
+}
+
+.aboutText {
+    padding-right: 1rem;
+}
+
+.aboutText .paragraph {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 300;
+}
+
+.highlight {
+    font-weight: 600;
+    background: linear-gradient(135deg, #00d4ff, #5b73ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.imageCard {
+    // background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.imageCard:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.iconContainer {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // background: rgba(0, 212, 255, 0.1);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.cardIcon {
+    font-size: 3rem;
+    color: #00d4ff;
+}
+
+.imageCard h3 {
+    color: #00d4ff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    text-align: center;
+}
+
+.imageCard p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* Feature Grid - Grid chuyên nghiệp */
+.featureGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+
+.featureCard {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.featureCard:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.featureIcon {
+    font-size: 2.5rem;
+    color: #06ffa5;
+    display: block;
+}
+
+.featureCard h3 {
+    color: #06ffa5;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.featureCard p {
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Service Grid - Layout card ngang */
+.serviceGrid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.serviceCard {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.serviceCard:hover {
+    transform: translateX(10px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.serviceIconContainer {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // background: rgba(91, 115, 255, 0.1);
+    border-radius: 12px;
+    margin-bottom: 0;
+}
+
+.serviceIcon {
+    font-size: 2.2rem;
+    color: #5b73ff;
+}
+
+.serviceContent {
+    flex: 1;
+}
+
+.serviceContent h4 {
+    color: #5b73ff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.serviceContent p {
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+/* Stats Grid - Cards nhỏ gọn */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.statCard {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.statCard:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.statIconContainer {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 0, 110, 0.1);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.statIcon {
+    font-size: 2rem;
+    color: #ff006e;
+}
+
+.statNumber {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ff006e, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    display: block;
+    line-height: 1;
+}
+
+.statLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Mission Grid - Cards lớn */
+.missionGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+
+.missionCard {
+    padding: 2.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    height: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.missionCard:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.missionIconContainer {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // background: rgba(6, 255, 165, 0.1);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.missionIcon {
+    font-size: 2.5rem;
+    color: #06ffa5;
+}
+
+.missionCard h3 {
+    font-size: 1.4rem;
+    color: #06ffa5;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.missionCard p {
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Footer Section */
+.footerSection {
+    text-align: center;
+    padding: 4rem 0 3rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 3rem;
+}
+
+.footerContent {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.footerIconContainer {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // background: rgba(6, 255, 165, 0.1);
+    border-radius: 15px;
+    margin: 0 auto 1.5rem;
+}
+
+.footerIcon {
+    font-size: 3rem;
+    color: #06ffa5;
+}
+
+.footerText {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #06ffa5;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+}
+
+.footerSubtext {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .aboutGrid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .aboutText {
+        padding-right: 0;
+    }
+
+    .missionGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .aboutWrapper {
+        top: 60px;
+        height: calc(100vh - 60px);
+    }
+
+    .container::before {
+        top: 60px;
+        height: calc(100% - 60px);
+    }
+
+    section {
+        padding: 3rem 0;
+    }
+
+    .sectionContainer {
+        padding: 0 1.5rem;
+    }
+
+    .content {
+        padding: 2rem 1.5rem;
+    }
+
+    .featureGrid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .serviceCard {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .sectionContainer {
+        padding: 0 1rem;
+    }
+
+    .content {
+        padding: 1.5rem 1rem;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .floatingIcon {
+        display: none;
+    }
+}
+
+/* Feature Grid - Grid chuyên nghiệp */
+.featureGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .featureGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .featureGrid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}

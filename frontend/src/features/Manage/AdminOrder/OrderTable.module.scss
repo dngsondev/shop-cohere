@@ -1,0 +1,163 @@
+.orderTable {
+    &__container {
+        overflow-x: auto;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+
+    &__header {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    &__headerCell {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+
+        &:hover {
+            background: rgba(59, 130, 246, 0.05);
+            color: #3b82f6;
+        }
+    }
+
+    &__headerContent {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    &__sortIcon {
+        font-size: 0.75rem;
+        opacity: 0.6;
+        transition: all 0.2s ease;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    &__body {
+        tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(59, 130, 246, 0.02);
+                transform: translateX(2px);
+            }
+
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+    }
+
+    &__loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1rem;
+        color: #64748b;
+        gap: 1rem;
+
+        &Spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+    }
+
+    &__empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1rem;
+        color: #64748b;
+        text-align: center;
+
+        &Icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1rem;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+    .orderTable {
+        &__table {
+            font-size: 0.8125rem;
+        }
+
+        &__headerCell {
+            padding: 0.75rem 1rem;
+            font-size: 0.6875rem;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .orderTable {
+        &__container {
+            margin: -1rem;
+            border-radius: 0;
+        }
+
+        &__headerCell {
+            padding: 0.75rem 0.5rem;
+            white-space: nowrap;
+        }
+
+        &__empty {
+            margin: -1rem;
+            border-radius: 0;
+        }
+    }
+}

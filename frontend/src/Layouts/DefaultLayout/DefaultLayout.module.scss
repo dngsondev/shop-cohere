@@ -1,0 +1,30 @@
+.defaultLayout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.defaultLayoutMain {
+    flex: 1;
+    margin-top: 80px; // Điều chỉnh theo chiều cao header
+    width: 100%;
+    padding: 24px 16px;
+}
+
+.defaultLayoutContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .defaultLayoutMain {
+        padding: 24px 32px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .defaultLayoutMain {
+        padding: 32px 64px;
+    }
+}

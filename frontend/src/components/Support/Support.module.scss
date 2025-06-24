@@ -1,0 +1,446 @@
+.supportPage {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 70px);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow-y: auto;
+    padding: 2rem 0;
+}
+
+.backgroundPattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.supportHeader {
+    text-align: center;
+    margin-bottom: 2rem; // Giảm từ 3rem xuống 2rem
+    position: relative;
+    z-index: 1;
+
+    .headerContent {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2rem 1.5rem; // Giảm padding
+        display: inline-block;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        font-size: 2.5rem; // Giảm từ 3rem xuống 2.5rem
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem; // Giảm margin
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        @media (max-width: 768px) {
+            font-size: 2rem;
+        }
+    }
+
+    p {
+        font-size: 1.1rem; // Giảm từ 1.3rem xuống 1.1rem
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+}
+
+.supportTabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem; // Giảm từ 2rem xuống 1.5rem
+    position: relative;
+    z-index: 1;
+}
+
+.tabButton {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.5rem; // Giảm padding
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: #4a5568;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        background: white;
+    }
+
+    &.active {
+        background: white;
+        color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+
+        svg {
+            color: #667eea;
+        }
+    }
+
+    svg {
+        font-size: 1.1rem; // Giảm size icon
+        transition: color 0.3s ease;
+    }
+
+    span {
+        font-size: 0.95rem; // Giảm font size
+    }
+
+    @media (max-width: 768px) {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.85rem;
+    }
+}
+
+.supportContent {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: visible; // Thay đổi từ hidden sang visible
+    position: relative;
+    z-index: 1;
+    animation: slideUp 0.5s ease-out;
+    margin: 0 1rem 2rem 1rem; // Thêm margin left/right
+    // Bỏ max-height để content tự động mở rộng
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// FAQ Styles
+.faqContainer {
+    padding: 2rem 1.5rem; // Giảm padding
+}
+
+.faqHeader {
+    text-align: center;
+    margin-bottom: 2rem; // Giảm margin
+
+    .faqIcon {
+        font-size: 2.5rem; // Giảm size icon
+        color: #667eea;
+        margin-bottom: 0.8rem;
+    }
+
+    h3 {
+        font-size: 1.8rem; // Giảm font size
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    p {
+        color: #718096;
+        font-size: 1rem; // Giảm font size
+    }
+}
+
+.faqList {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faqItem {
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 0.8rem; // Giảm margin
+    overflow: visible; // Thay đổi từ hidden sang visible
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+
+    &:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+    }
+
+    &.expanded {
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+        border-color: #667eea;
+
+        .faqQuestion {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+
+            .faqToggle {
+                color: white;
+            }
+        }
+
+        .faqAnswer {
+            max-height: 500px; // Tăng lên đủ cao
+            overflow: visible;
+        }
+    }
+}
+
+.faqQuestion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem; // Giảm padding
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    h4 {
+        margin: 0;
+        font-size: 1rem; // Giảm font size
+        font-weight: 600;
+        color: #2d3748;
+        flex: 1;
+        padding-right: 1rem;
+    }
+
+    .faqToggle {
+        font-size: 0.9rem;
+        color: #667eea;
+        transition: all 0.3s ease;
+    }
+}
+
+.faqAnswer {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease-in-out; // Tăng thời gian transition
+
+    .expanded & {
+        max-height: fit-content; // Sử dụng fit-content
+        // Hoặc tăng max-height lên cao hơn
+        max-height: 300px; // Tăng từ 150px lên 300px
+    }
+
+    p {
+        padding: 0 1.2rem 1.2rem;
+        margin: 0;
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+}
+
+// Hoặc giải pháp tốt hơn - sử dụng auto height cho expanded state
+.faqAnswer {
+    // padding-top: 1.2rem; // Giảm padding
+    overflow: hidden;
+    transition: all 0.4s ease-in-out;
+
+    &:not(.expanded) {
+        max-height: 0;
+    }
+
+    &.expanded {
+        max-height: none; // Cho phép tự động điều chỉnh
+        overflow: visible;
+    }
+
+    p {
+        padding: 0 1.2rem 1.2rem;
+        margin: 0;
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+}
+
+// Contact Styles
+.contactContainer {
+    padding: 2rem 1.5rem; // Giảm padding
+}
+
+.contactHeader {
+    text-align: center;
+    margin-bottom: 2rem; // Giảm margin
+
+    .contactHeaderIcon {
+        font-size: 2.5rem; // Giảm size icon
+        color: #667eea;
+        margin-bottom: 0.8rem;
+    }
+
+    h3 {
+        font-size: 1.8rem; // Giảm font size
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    p {
+        color: #718096;
+        font-size: 1rem; // Giảm font size
+    }
+}
+
+.contactGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); // Giảm min-width
+    gap: 1.5rem; // Giảm gap
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.contactCard {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 16px;
+    padding: 1.5rem; // Giảm padding
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+}
+
+.contactCardHeader {
+    margin-bottom: 1.2rem; // Giảm margin
+
+    .contactIcon {
+        font-size: 2rem; // Giảm size icon
+        color: #667eea;
+        margin-bottom: 0.8rem;
+        display: block;
+    }
+
+    h4 {
+        font-size: 1.2rem; // Giảm font size
+        color: #2d3748;
+        margin: 0;
+        font-weight: 600;
+    }
+}
+
+.contactDetails {
+    .primaryContact {
+        font-size: 1.1rem; // Giảm font size
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.4rem;
+    }
+
+    .contactNote {
+        display: block;
+        font-size: 0.85rem; // Giảm font size
+        color: #667eea;
+        font-weight: 500;
+        margin-bottom: 0.8rem;
+    }
+
+    p {
+        color: #4a5568;
+        margin-bottom: 0.4rem;
+        font-size: 0.95rem; // Giảm font size
+    }
+
+    .workingHours {
+        display: block;
+        font-size: 0.85rem; // Giảm font size
+        color: #718096;
+        font-style: italic;
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid #e2e8f0;
+    }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+    .supportPage {
+        padding-top: 100px; // Giảm cho mobile
+    }
+
+    .supportHeader {
+        margin-bottom: 1.5rem;
+
+        .headerContent {
+            padding: 1.5rem 1rem; // Giảm padding cho mobile
+        }
+    }
+
+    .supportTabs {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .faqContainer,
+    .contactContainer {
+        padding: 1.5rem 1rem; // Giảm padding cho mobile
+    }
+
+    .contactGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .contactCard {
+        padding: 1.2rem; // Giảm padding cho mobile
+    }
+
+    .supportContent {
+        margin: 0 0.5rem 2rem 0.5rem; // Giảm margin cho mobile
+    }
+}
+
+@media (max-width: 480px) {
+    .supportPage {
+        padding-top: 90px; // Giảm thêm cho mobile nhỏ
+    }
+
+    .faqQuestion {
+        padding: 1rem;
+
+        h4 {
+            font-size: 0.95rem;
+        }
+    }
+
+    .faqAnswer p {
+        padding: 0 1rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .faqItem.expanded .faqAnswer {
+        max-height: 350px; // Điều chỉnh cho mobile nhỏ
+    }
+}

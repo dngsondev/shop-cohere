@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+
+    --color-primary: #1480f3;
+
+    --color-white: #FFFFFF;
+    --color-black: #000000;
+    --color-gray: #F3F4F6;
+    --color-brown: #4A4A4A;
+    --color-red: #FF0000;
+    --color-smokyGreen: #ccd1c4;
+    --color-beige: #d2cbc0;
+
+}
+
+/* Ẩn mũi tên trong input number trên Chrome, Safari, Edge */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Ẩn mũi tên trong input number trên Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}

@@ -1,0 +1,222 @@
+.orderStats {
+    margin-bottom: 2rem;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    &__card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        &--blue {
+            --gradient: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            --icon-bg: rgba(59, 130, 246, 0.1);
+            --icon-color: #3b82f6;
+        }
+
+        &--orange {
+            --gradient: linear-gradient(135deg, #f59e0b, #d97706);
+            --icon-bg: rgba(245, 158, 11, 0.1);
+            --icon-color: #f59e0b;
+        }
+
+        &--green {
+            --gradient: linear-gradient(135deg, #10b981, #047857);
+            --icon-bg: rgba(16, 185, 129, 0.1);
+            --icon-color: #10b981;
+        }
+
+        &--red {
+            --gradient: linear-gradient(135deg, #ef4444, #dc2626);
+            --icon-bg: rgba(239, 68, 68, 0.1);
+            --icon-color: #ef4444;
+        }
+
+        &--purple {
+            --gradient: linear-gradient(135deg, #8b5cf6, #5b21b6);
+            --icon-bg: rgba(139, 92, 246, 0.1);
+            --icon-color: #8b5cf6;
+        }
+
+        &--teal {
+            --gradient: linear-gradient(135deg, #14b8a6, #0f766e);
+            --icon-bg: rgba(20, 184, 166, 0.1);
+            --icon-color: #14b8a6;
+        }
+
+        &--yellow {
+            --gradient: linear-gradient(135deg, #eab308, #ca8a04);
+            --icon-bg: rgba(234, 179, 8, 0.1);
+            --icon-color: #eab308;
+        }
+
+        &--indigo {
+            --gradient: linear-gradient(135deg, #6366f1, #4338ca);
+            --icon-bg: rgba(99, 102, 241, 0.1);
+            --icon-color: #6366f1;
+        }
+
+        &Content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        &Info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        &Title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        &Value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1a202c;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+            word-break: break-word;
+        }
+
+        &Description {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        &Icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--icon-bg);
+            color: var(--icon-color);
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+
+        &Meta {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            font-size: 0.75rem;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        &Percentage {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+
+            &--positive {
+                color: #10b981;
+            }
+
+            &--negative {
+                color: #ef4444;
+            }
+        }
+    }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+    .orderStats {
+        &__grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .orderStats {
+        &__grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        &__card {
+            padding: 1.25rem;
+
+            &Value {
+                font-size: 1.5rem;
+            }
+
+            &Icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+            }
+
+            &Meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .orderStats {
+        &__card {
+            padding: 1rem;
+
+            &Content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            &Icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.125rem;
+                margin-left: 0;
+            }
+
+            &Value {
+                font-size: 1.375rem;
+            }
+        }
+    }
+}

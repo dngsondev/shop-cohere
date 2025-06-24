@@ -1,0 +1,153 @@
+:root {
+    --color-light-green: #7FD1C0;
+    --color-light-pink: #F7DDFE;
+    --color-light-yellow: #FCE4C0;
+}
+
+.search-bar {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+.search-bar.active {
+    width: 280px;
+    min-width: 120px;
+    max-width: 320px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+    border-radius: 12px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Logo styling */
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1a3e72;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    transition: font-size 0.2s;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Responsive logo styling */
+@media (max-width: 768px) {
+    .logo {
+        font-size: 1.2rem;
+        letter-spacing: 1px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+    }
+
+    .search-bar.active {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90vw;
+        min-width: 0;
+        max-width: 95vw;
+        z-index: 1100;
+    }
+}
+
+.menuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3); // Nền trong suốt, thấy được nội dung bên dưới
+    z-index: 1000;
+    transition: background 0.3s;
+}
+
+.menuDrawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 75vw;
+    max-width: 320px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.08);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px 32px 20px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+    animation: slideIn 0.3s;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.menuClose {
+    align-self: flex-end;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-bottom: 32px;
+    color: #1a3e72;
+    background: none;
+    border: none;
+}
+
+.menuList {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.menuItem {
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: #1a3e72;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.menuItem:hover {
+    color: #7FD1C0;
+}
+
+.loginBtn {
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(90deg, #4f8cff 0%, #7FD1C0 100%);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(79, 140, 255, 0.10);
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+    margin-left: 0.5rem;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -1,0 +1,685 @@
+.orderDetailModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    /* Đảm bảo hiển thị trên tất cả */
+    padding: 1rem;
+    opacity: 0;
+    animation: fadeIn 0.3s ease-out forwards;
+    overflow: hidden;
+
+    &__content {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: 1.5rem;
+        width: 100%;
+        max-width: 1200px;
+        max-height: 95vh;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transform: scale(0.9) translateY(20px);
+        animation: slideUp 0.3s ease-out forwards;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 2rem 2.5rem 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-bottom: 2px solid rgba(226, 232, 240, 0.5);
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+    }
+
+    &__titleSection {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        &Icon {
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+    }
+
+    &__subtitle {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    &__revenueStatus {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+
+        &--confirmed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #047857;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        &--pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        &Icon {
+            font-size: 1rem;
+        }
+    }
+
+    &__closeBtn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #64748b;
+        cursor: pointer;
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        &:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            transform: scale(1.1);
+        }
+    }
+
+    &__body {
+        flex: 1;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    }
+
+    &__section {
+        padding: 2rem 2.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &--highlight {
+            background: rgba(59, 130, 246, 0.02);
+        }
+    }
+
+    &__sectionTitle {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &Icon {
+            color: #3b82f6;
+            font-size: 1.125rem;
+        }
+    }
+
+    &__infoGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    &__infoCard {
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+    }
+
+    &__infoLabel {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    &__infoValue {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1a202c;
+        word-break: break-word;
+
+        &--price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ef4444;
+
+            &.confirmed {
+                color: #10b981;
+            }
+        }
+
+        &--status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    }
+
+    &__statusBadge {
+        &--pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        &--confirmed {
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        &--shipping {
+            background: rgba(139, 92, 246, 0.1);
+            color: #5b21b6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        &--completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #047857;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        &--cancelled {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        &--paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: #047857;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        &--unpaid {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        &--qr {
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+    }
+
+    &__productTable {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    &__tableHeader {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    &__tableHeaderCell {
+        padding: 1.25rem 1.5rem;
+        text-align: left;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+        border-right: 1px solid rgba(226, 232, 240, 0.5);
+
+        &:last-child {
+            border-right: none;
+        }
+    }
+
+    &__tableRow {
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: rgba(59, 130, 246, 0.02);
+        }
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    &__tableCell {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-right: 1px solid rgba(226, 232, 240, 0.3);
+
+        &:last-child {
+            border-right: none;
+        }
+    }
+
+    &__productImage {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+
+    &__productInfo {
+        min-width: 250px;
+    }
+
+    &__productName {
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    &__productId {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    &__attributeTag {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    &__quantity {
+        font-weight: 700;
+        color: #374151;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    &__price {
+        font-weight: 700;
+        color: #ef4444;
+        font-size: 1rem;
+        text-align: right;
+        font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+    }
+
+    &__totalSection {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        margin-top: 1.5rem;
+        border-radius: 1rem;
+        padding: 2rem;
+        border: 2px solid rgba(59, 130, 246, 0.1);
+    }
+
+    &__totalRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+
+        &:last-child {
+            border-bottom: none;
+            padding-top: 1.5rem;
+            margin-top: 1rem;
+            border-top: 2px solid rgba(59, 130, 246, 0.2);
+        }
+
+        &--total {
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+    }
+
+    &__totalLabel {
+        font-weight: 600;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    &__totalValue {
+        font-weight: 700;
+        color: #ef4444;
+        font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+
+        &--total {
+            font-size: 1.5rem;
+            color: #10b981;
+        }
+    }
+
+    &__loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+        gap: 1rem;
+
+        &Spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        &Text {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+    }
+
+    &__empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+
+        &Icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 0.875rem;
+        }
+    }
+
+    &__footer {
+        padding: 1.5rem 2.5rem;
+        background: rgba(248, 250, 252, 0.8);
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+
+    &__btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &--close {
+            background: #64748b;
+            color: white;
+
+            &:hover {
+                background: #475569;
+                transform: translateY(-2px);
+            }
+        }
+
+        &--print {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            }
+        }
+    }
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    to {
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+    .orderDetailModal {
+        padding: 0.5rem;
+
+        &__content {
+            max-width: calc(100vw - 1rem);
+            max-height: calc(100vh - 1rem);
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .orderDetailModal {
+        padding: 0.25rem;
+
+        &__content {
+            border-radius: 1rem;
+            max-width: calc(100vw - 0.5rem);
+            max-height: calc(100vh - 0.5rem);
+        }
+
+        &__header {
+            padding: 1.5rem 1.5rem 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        &__title {
+            font-size: 1.5rem;
+        }
+
+        &__section {
+            padding: 1.5rem;
+        }
+
+        &__infoGrid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        &__infoCard {
+            padding: 1rem;
+        }
+
+        &__tableHeaderCell,
+        &__tableCell {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        &__productImage {
+            width: 50px;
+            height: 50px;
+        }
+
+        &__productInfo {
+            min-width: 200px;
+        }
+
+        &__footer {
+            padding: 1rem 1.5rem;
+            flex-direction: column;
+        }
+
+        &__btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .orderDetailModal {
+        &__header {
+            padding: 1rem;
+        }
+
+        &__section {
+            padding: 1rem;
+        }
+
+        &__title {
+            font-size: 1.25rem;
+        }
+
+        &__tableHeaderCell,
+        &__tableCell {
+            padding: 0.5rem 0.25rem;
+        }
+
+        &__productTable {
+            font-size: 0.75rem;
+        }
+    }
+}
+
+// Print styles
+@media print {
+    .orderDetailModal {
+        position: static;
+        background: white;
+
+        &__content {
+            box-shadow: none;
+            border: 1px solid #000;
+            max-height: none;
+            overflow: visible;
+        }
+
+        &__closeBtn,
+        &__footer {
+            display: none;
+        }
+
+        &__header {
+            background: white;
+            border-bottom: 2px solid #000;
+        }
+
+        &__tableRow:hover {
+            background: white;
+        }
+
+        &__body {
+            overflow: visible;
+        }
+    }
+}

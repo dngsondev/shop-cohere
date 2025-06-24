@@ -1,0 +1,528 @@
+/* Card sản phẩm 3D */
+.product-card {
+    transition:
+        transform 0.3s cubic-bezier(.4, 2, .3, 1),
+        box-shadow 0.3s;
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
+    perspective: 600px;
+    will-change: transform, box-shadow;
+}
+
+.product-card:hover,
+.product-card:focus-within {
+    transform: perspective(600px) rotateY(6deg) scale(1.04) translateY(-4px);
+    box-shadow: 0 16px 40px 0 rgba(59, 130, 246, 0.18), 0 2px 8px 0 rgba(34, 197, 94, 0.10);
+    z-index: 2;
+}
+
+/* Ảnh sản phẩm 3D */
+.product-img {
+    transition: transform 0.35s cubic-bezier(.4, 2, .3, 1), box-shadow 0.25s;
+    box-shadow: 0 2px 12px 0 rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+}
+
+.product-img:hover,
+.product-img:focus {
+    transform: perspective(500px) rotateX(8deg) scale(1.08);
+    box-shadow: 0 12px 32px 0 rgba(59, 130, 246, 0.18);
+    z-index: 2;
+}
+
+/* Nút bấm 3D */
+.btn-animated {
+    transition:
+        background 0.18s,
+        color 0.18s,
+        transform 0.18s,
+        box-shadow 0.18s;
+    box-shadow: 0 2px 8px 0 rgba(34, 197, 94, 0.10);
+    will-change: transform;
+}
+
+.btn-animated:hover,
+.btn-animated:focus {
+    background: #2563eb;
+    color: #fff;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 24px 0 rgba(59, 130, 246, 0.18);
+}
+
+.btn-animated:active {
+    transform: scale(0.97);
+    background: #1d4ed8;
+}
+
+/* Input, select */
+.input-animated,
+.select-animated {
+    transition: border 0.18s, box-shadow 0.18s;
+}
+
+.input-animated:focus,
+.select-animated:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px #60a5fa44;
+    outline: none;
+}
+
+/* Hiệu ứng rung rinh 2 đầu cho badge giảm giá */
+.discount-badge {
+    animation: swing-badge 1s infinite alternate cubic-bezier(.36, .07, .19, .97);
+    display: inline-block;
+    will-change: transform;
+}
+
+@keyframes swing-badge {
+    0% {
+        transform: rotate(-5deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(5deg) scale(1.08);
+    }
+
+    100% {
+        transform: rotate(-5deg) scale(1);
+    }
+}
+
+/* Hiệu ứng cho tab */
+.tab-btn {
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+    will-change: transform;
+}
+
+.tab-btn:hover,
+.tab-btn:focus {
+    background: #3b82f6;
+    color: #fff;
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 4px 16px 0 rgba(59, 130, 246, 0.12);
+}
+
+/* Hiệu ứng cho pagination */
+.pagination-btn {
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+}
+
+.pagination-btn:hover,
+.pagination-btn:focus {
+    background: #2563eb;
+    color: #fff;
+    transform: scale(1.08);
+}
+
+/* Hiệu ứng cho card sản phẩm nổi bật */
+.outstanding-card {
+    transition: box-shadow 0.25s, transform 0.25s;
+    will-change: transform;
+}
+
+.outstanding-card:hover,
+.outstanding-card:focus-within {
+    box-shadow: 0 12px 32px 0 rgba(251, 191, 36, 0.18);
+    transform: scale(1.04) rotateZ(-2deg);
+}
+
+/* Hiệu ứng cho ảnh sản phẩm trong slider */
+.product-slider-img {
+    transition: transform 0.3s cubic-bezier(.4, 2, .3, 1), box-shadow 0.2s;
+}
+
+.product-slider-img:hover {
+    transform: scale(1.1) rotate(-2deg);
+    box-shadow: 0 8px 24px 0 rgba(59, 130, 246, 0.18);
+}
+
+/* Hiệu ứng cho nút chính */
+.btn-main {
+    transition: background 0.18s, color 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px 0 rgba(34, 197, 94, 0.10);
+}
+
+.btn-main:hover,
+.btn-main:focus {
+    background: #2563eb;
+    color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px 0 rgba(59, 130, 246, 0.18);
+}
+
+/* Hiệu ứng cho badge giảm giá */
+.discount-badge {
+    animation: swing-badge 1s infinite alternate cubic-bezier(.36, .07, .19, .97);
+    display: inline-block;
+    will-change: transform;
+}
+
+@keyframes swing-badge {
+    0% {
+        transform: rotate(-5deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(5deg) scale(1.08);
+    }
+
+    100% {
+        transform: rotate(-5deg) scale(1);
+    }
+}
+
+/* Hiệu ứng cho icon giỏ hàng */
+.cart-icon-animated {
+    transition: transform 0.2s;
+}
+
+.cart-icon-animated:hover {
+    transform: scale(1.2) rotate(-10deg);
+}
+
+/* Hiệu ứng cho avatar user */
+.user-avatar-animated {
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.user-avatar-animated:hover {
+    box-shadow: 0 4px 16px 0 rgba(59, 130, 246, 0.18);
+    transform: scale(1.08);
+}
+
+/* Hiệu ứng cho ảnh bubble */
+.bubble-img {
+    transition:
+        transform 0.4s cubic-bezier(.22, 1.61, .36, 1),
+        box-shadow 0.3s cubic-bezier(.22, 1.61, .36, 1),
+        filter 0.3s;
+    will-change: transform, box-shadow, filter;
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 1;
+}
+
+.bubble-img:hover,
+.bubble-img:focus {
+    transform: scale(1.16);
+    box-shadow: 0 16px 48px 0 rgba(59, 130, 246, 0.22), 0 2px 8px 0 rgba(34, 197, 94, 0.10);
+    filter: brightness(1.08) saturate(1.08);
+}
+
+/* Hiệu ứng cho ánh sáng phản chiếu */
+.bubble-img::after {
+    content: "";
+    display: block;
+    pointer-events: none;
+    position: absolute;
+    left: 18%;
+    top: 10%;
+    width: 40%;
+    height: 22%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.4s;
+    z-index: 2;
+}
+
+.bubble-img:hover::after,
+.bubble-img:focus::after {
+    opacity: 1;
+}
+
+/* Hiệu ứng cho modal ảnh */
+.image-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeInModal 0.2s;
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.image-modal-fixed {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeInModal 0.2s;
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.image-modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+    padding: 18px;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: scaleInModal 0.25s cubic-bezier(.22, 1.61, .36, 1);
+}
+
+@keyframes scaleInModal {
+    from {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.image-modal-img {
+    max-width: 80vw;
+    max-height: 80vh;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(59, 130, 246, 0.12);
+    background: #fff;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 2.2rem;
+    color: #2563eb;
+    cursor: pointer;
+    transition: color 0.2s;
+    z-index: 2;
+}
+
+.image-modal-close:hover {
+    color: #ef4444;
+}
+
+/* ProductEffects.css */
+.product-main-img {
+    transition: transform 0.4s cubic-bezier(.4, 2, .3, 1), opacity 0.3s;
+    position: relative;
+}
+
+.slide-in {
+    animation: slideInFromRight 0.3s;
+}
+
+.slide-out-left {
+    animation: slideOutToLeft 0.3s;
+}
+
+.slide-out-right {
+    animation: slideOutToRight 0.3s;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-60px);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+}
+
+/* Hiệu ứng badge giảm giá */
+.discount-badge {
+    animation: swing-badge 1.2s infinite alternate;
+}
+
+@keyframes swing-badge {
+    0% {
+        transform: rotate(-8deg) scale(1);
+    }
+
+    100% {
+        transform: rotate(8deg) scale(1.08);
+    }
+}
+
+/* Hiệu ứng cảnh báo */
+.alert-animated {
+    animation: alert-blink 1.2s infinite alternate;
+}
+
+@keyframes alert-blink {
+    0% {
+        background: #fef9c3;
+    }
+
+    100% {
+        background: #fef08a;
+    }
+}
+
+/* Hiệu ứng xuất hiện cho tên sản phẩm */
+.product-title-animated {
+    animation: fadeInDown 0.7s cubic-bezier(.4, 2, .3, 1);
+}
+
+@keyframes fadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-24px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hiệu ứng nhấp nháy cho sao */
+.star-animated {
+    animation: starPop 1.2s cubic-bezier(.4, 2, .3, 1) alternate infinite;
+}
+
+@keyframes starPop {
+    0% {
+        transform: scale(1) rotate(-5deg);
+    }
+
+    100% {
+        transform: scale(1.18) rotate(7deg);
+    }
+}
+
+/* Hiệu ứng tăng giá tiền */
+.price-animated {
+    animation: priceUp 0.8s cubic-bezier(.4, 2, .3, 1);
+}
+
+@keyframes priceUp {
+    0% {
+        opacity: 0;
+        transform: scale(0.85) translateY(12px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Hiệu ứng rung cho badge giảm giá */
+.discount-badge-animated {
+    animation: swing-badge 1.2s infinite alternate;
+}
+
+/* Badge giảm giá nhỏ và lấp lánh */
+.discount-badge {
+    font-size: 0.75rem;
+    /* nhỏ hơn */
+    padding: 0.1em 0.5em;
+    /* nhỏ gọn */
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px 0 rgba(239, 68, 68, 0.12);
+}
+
+.discount-badge-animated {
+    animation: swing-badge 1.2s infinite alternate;
+}
+
+@keyframes swing-badge {
+    0% {
+        transform: rotate(-7deg) scale(1);
+    }
+
+    100% {
+        transform: rotate(7deg) scale(1.08);
+    }
+}
+
+/* Hiệu ứng bling bling */
+.discount-badge::after {
+    content: "";
+    position: absolute;
+    top: -60%;
+    left: -60%;
+    width: 180%;
+    height: 180%;
+    background: linear-gradient(120deg, transparent 60%, #fff8 100%);
+    opacity: 0.7;
+    transform: rotate(0deg);
+    pointer-events: none;
+    animation: bling-badge 1.8s linear infinite;
+}
+
+@keyframes bling-badge {
+    0% {
+        transform: rotate(0deg) translate(-60%, -60%);
+    }
+
+    100% {
+        transform: rotate(360deg) translate(60%, 60%);
+    }
+}
+
+.image-modal-overlay {
+    animation: fadeInModal 0.25s;
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

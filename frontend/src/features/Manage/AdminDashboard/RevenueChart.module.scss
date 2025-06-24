@@ -1,0 +1,224 @@
+.revenueChart {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2.5rem;
+
+    &__header {
+        margin-bottom: 1.5rem;
+
+        &Title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    &__filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    &__filterGroup {
+        &Label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        &Input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.8);
+
+            &:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                background: white;
+            }
+        }
+    }
+
+    &__summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    &__summaryCard {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        &--blue {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-color: #3b82f6;
+        }
+
+        &--green {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #10b981;
+        }
+
+        &--purple {
+            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+            border-color: #8b5cf6;
+        }
+
+        &--orange {
+            background: linear-gradient(135deg, #fed7aa, #fdba74);
+            border-color: #f59e0b;
+        }
+
+        &Label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        &Value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1.2;
+
+            &--blue {
+                color: #1d4ed8;
+            }
+
+            &--green {
+                color: #047857;
+            }
+
+            &--purple {
+                color: #5b21b6;
+            }
+
+            &--orange {
+                color: #d97706;
+            }
+        }
+    }
+
+    &__chartContainer {
+        height: 400px;
+        position: relative;
+        background: rgba(248, 250, 252, 0.5);
+        border-radius: 0.75rem;
+        padding: 1rem;
+    }
+
+    &__loading,
+    &__noData {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        font-weight: 500;
+    }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+    .revenueChart {
+        &__summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .revenueChart {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+
+        &__header {
+            &Title {
+                font-size: 1.125rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        &__filters {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        &__summary {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        &__summaryCard {
+            padding: 0.75rem;
+
+            &Value {
+                font-size: 1.125rem;
+            }
+        }
+
+        &__chartContainer {
+            height: 300px;
+            padding: 0.75rem;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .revenueChart {
+        padding: 1rem;
+
+        &__header {
+            &Title {
+                font-size: 1rem;
+            }
+        }
+
+        &__filterGroup {
+            &Input {
+                padding: 0.625rem 0.75rem;
+                font-size: 0.8125rem;
+            }
+        }
+
+        &__summaryCard {
+            padding: 0.625rem;
+
+            &Label {
+                font-size: 0.6875rem;
+            }
+
+            &Value {
+                font-size: 1rem;
+            }
+        }
+
+        &__chartContainer {
+            height: 250px;
+            padding: 0.5rem;
+        }
+    }
+}
