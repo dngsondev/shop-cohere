@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/admin';
+// const API_URL = 'http://localhost:5000/admin';
+const API_URL = import.meta.env.VITE_BACKEND_URL + '/admin';
 
 // Tạo instance axios với interceptor
 const adminAxios = axios.create({

@@ -148,9 +148,9 @@ const Header = React.memo(({ setLogin }) => {
                     onClick={() => setMenuOpen(false)}
                 />
             )}
-            <div className="container mx-auto flex items-center h-20 px-2 md:px-8">
-                {/* Logo */}
-                <div className="flex items-center w-1/4">
+            <div className="container mx-auto flex flex-nowrap items-center h-20 px-2 md:px-8 min-w-0 overflow-x-hidden">
+                <div className="flex items-center">
+                    {/* Logo */}
                     <button
                         className="md:hidden p-2 rounded-md hover:bg-blue-100 transition"
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -163,7 +163,7 @@ const Header = React.memo(({ setLogin }) => {
                     </Link>
                 </div>
                 {/* Nav desktop */}
-                <nav className="hidden md:flex items-center w-2/4 justify-center gap-8">
+                <nav className="hidden md:flex items-center flex-1 justify-center gap-8 min-w-0">
                     {navLinks.map(link => (
                         <Link
                             key={link.label}
@@ -175,7 +175,7 @@ const Header = React.memo(({ setLogin }) => {
                     ))}
                 </nav>
                 {/* Search, Cart, User */}
-                <div className="flex items-center w-3/4 md:w-1/4 justify-end gap-4 relative">
+                <div className="flex items-center justify-end gap-4 relative min-w-0">
                     {/* Search box tách biệt, không ảnh hưởng cart/avatar */}
                     <div>
                         <div

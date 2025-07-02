@@ -51,80 +51,38 @@
 //     return `${baseUrl}/uploads/${imagePath}`;
 // };
 
+
+
 export const getFullImageUrl = (imagePath) => {
-    // Xử lý trường hợp không có đường dẫn
-    if (!imagePath) {
-        return '/images/otherImages/no-image-placeholder.png';
-    }
+    if (!imagePath) return '/images/avatar/avatar-default.png';
 
-    // Debug log
-    console.log('🔍 getFullImageUrl input:', imagePath);
-
-    // Nếu đường dẫn đã là URL đầy đủ
+    // Nếu là URL đầy đủ (Google, Facebook, ...)
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-        console.log('✅ Full URL detected:', imagePath);
         return imagePath;
     }
 
-    // Xử lý đường dẫn data URL (base64) - di chuyển lên trên
+    // Nếu là base64
     if (imagePath.startsWith('data:')) {
-        console.log('✅ Base64 URL detected');
         return imagePath;
     }
 
-    // Xử lý đường dẫn blob URL - di chuyển lên trên  
-    if (imagePath.startsWith('blob:')) {
-        console.log('✅ Blob URL detected');
-        return imagePath;
-    }
-
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    console.log('🔧 Base URL:', baseUrl);
-
-    // Xử lý uploads/avatars/ (thêm case đặc biệt cho avatar)
-    if (imagePath.includes('/uploads/avatars/') || imagePath.startsWith('uploads/avatars/')) {
-        const finalUrl = imagePath.startsWith('/') ? `${baseUrl}${imagePath}` : `${baseUrl}/${imagePath}`;
-        console.log('✅ Avatar URL generated:', finalUrl);
-        return finalUrl;
-    }
-
-    if (imagePath.startsWith('/uploads/quill/')) {
-        const finalUrl = `${baseUrl}${imagePath}`;
-        console.log('✅ Quill URL generated:', finalUrl);
-        return finalUrl;
-    }
-
-    // Nếu đường dẫn bắt đầu bằng "/uploads/" (absolute path)
+    // Nếu là đường dẫn uploads (avatar upload)
+    // const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
     if (imagePath.startsWith('/uploads/')) {
-        const finalUrl = `${baseUrl}${imagePath}`;
-        console.log('✅ Uploads absolute URL generated:', finalUrl);
-        return finalUrl;
+        return `${baseUrl}${imagePath}`;
     }
-
-    // Nếu đường dẫn bắt đầu bằng "uploads/" (relative path)
     if (imagePath.startsWith('uploads/')) {
-        const finalUrl = `${baseUrl}/${imagePath}`;
-        console.log('✅ Uploads relative URL generated:', finalUrl);
-        return finalUrl;
+        return `${baseUrl}/${imagePath}`;
     }
 
-    // Nếu đường dẫn bắt đầu bằng "images/" (frontend static files)
-    if (imagePath.startsWith('images/')) {
-        const finalUrl = `/${imagePath}`;
-        console.log('✅ Static images URL generated:', finalUrl);
-        return finalUrl;
-    }
-
-    // Nếu đường dẫn bắt đầu bằng "/images/" (frontend static files)
+    // Nếu là ảnh mặc định
     if (imagePath.startsWith('/images/')) {
-        console.log('✅ Static images absolute URL:', imagePath);
         return imagePath;
     }
 
-    // Trường hợp mặc định - thêm vào uploads/
-    const finalUrl = `${baseUrl}/uploads/${imagePath}`;
-    console.log('⚠️ Default URL generated:', finalUrl);
-    return finalUrl;
+    // Trường hợp khác
+    return imagePath;
 };
 
 // Hàm xử lý đường dẫn hình ảnh biến thể khi lưu vào DB
@@ -137,7 +95,11 @@ export const processVariantImageUrl = (imageUrl) => {
     }
 
     // Nếu là URL localhost hoặc URL đầy đủ
-    if (imageUrl.includes('localhost:5000') || imageUrl.startsWith('http')) {
+    if (
+        imageUrl.includes('localhost:5000') ||
+        imageUrl.includes(import.meta.env.VITE_BACKEND_URL) ||
+        imageUrl.startsWith('http')
+    ) {
         const urlParts = imageUrl.split('/');
         const filename = urlParts[urlParts.length - 1];
 

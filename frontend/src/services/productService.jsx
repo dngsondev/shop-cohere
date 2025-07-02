@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/products';
-const UPLOAD_URL = 'http://localhost:5000/upload';
+// const API_URL = 'http://localhost:5000/products';
+const API_URL = import.meta.env.VITE_BACKEND_URL + '/products';
+// const UPLOAD_URL = 'http://localhost:5000/upload';
+const UPLOAD_URL = import.meta.env.VITE_BACKEND_URL + '/upload';
 
 const productService = {
     // Products

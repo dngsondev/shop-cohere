@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/cart';
+// const API_URL = 'http://localhost:5000/cart';
+const API_URL = import.meta.env.VITE_BACKEND_URL + '/cart';
 
 const cartService = {
     getCart: (customerId) => axios.get(`${API_URL}/${customerId}`),

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaUser, FaTimes, FaPhone, FaVideo, FaInfo, FaPaperPlane, FaCircle } from 'react-icons/fa';
 import { IoMdSend } from 'react-icons/io';
-import { BsThreeDotsVertical } from 'react-icons/bs';
+// import { BsThreeDotsVertical } from 'react-icons/bs';
 import { MdSupportAgent } from 'react-icons/md';
 import chatService from '../../services/chatService';
 import styles from './StaffChat.module.scss';

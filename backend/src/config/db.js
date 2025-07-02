@@ -4,15 +4,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  // Thêm cấu hình tối ưu cho xử lý nhiều files
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true,
-  maxReconnects: 3
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    // Thêm cấu hình tối ưu cho xử lý nhiều files
+    //   acquireTimeout: 60000,
+    //   timeout: 60000,
+    //   reconnect: true,
+    //   maxReconnects: 3
 });
 
 connection.connect((err) => {
