@@ -275,7 +275,16 @@ export const getProductById = (id) => {
                 LEFT JOIN product_images pi ON p.product_id = pi.product_id
 				        LEFT JOIN reviews r ON r.product_id = p.product_id
                 WHERE p.product_id = ?
-                GROUP BY p.product_id, b.brand_id, b.brand_name, cat.category_id, cat.category_name
+                GROUP BY 
+                  p.product_id,
+                  p.product_name,
+                  p.description,
+                  p.discount,
+                  pv.price,
+                  b.brand_id,
+                  b.brand_name,
+                  cat.category_id,
+                  cat.category_name
                 LIMIT 1;`
     connection.query(query, [id], (err, results) => {
       if (err) reject(err);
