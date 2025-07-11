@@ -226,71 +226,139 @@ export const getInforToCohere = () => {
 };
 
 //Lays san pham theo id
+// export const getProductById = (id) => {
+//   return new Promise((resolve, reject) => {
+//     const query = `SELECT 
+//                     p.product_id,
+//                     p.product_name,
+//                     p.description,
+//                     p.discount,
+//                     (pv.price * (1 - p.discount / 100)) AS final_price,
+//                     pv.price,
+
+//                     b.brand_id, 
+//                     b.brand_name AS brand,
+
+//                     cat.category_id, 
+//                     cat.category_name AS category,
+
+//                     GROUP_CONCAT(DISTINCT pi.product_image_url) AS product_images,
+
+//                     CONCAT(
+//                       '[',
+//                       GROUP_CONCAT(
+//                         JSON_OBJECT(
+//                           'variant_id', IFNULL(pv.variant_id, 0),
+//                           'color_id', IFNULL(c.color_id, 0),
+//                           'color', IFNULL(c.color_code, ''),
+//                           'color_name', IFNULL(c.color_name, ''),
+//                           'size_id', IFNULL(s.size_id, 0),
+//                           'size', IFNULL(s.size_name, ''),
+//                           'material_id', IFNULL(m.material_id, 0),
+//                           'material', IFNULL(m.material_name, ''),
+//                           'image_url', IFNULL(pv.image_url, ''),
+//                           'quantity', IFNULL(pv.quantity, 0)
+//                         ) 
+//                         ORDER BY pv.variant_id SEPARATOR ','
+//                       ),
+//                       ']'
+//                     ) AS variants,
+
+//                     ROUND(AVG(r.rating), 1) AS avg_rating,
+//                     COUNT(DISTINCT r.review_id) AS review_count
+
+//                 FROM products p
+//                 LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.variant_id IS NOT NULL
+//                 LEFT JOIN colors c ON pv.color_id = c.color_id
+//                 LEFT JOIN sizes s ON pv.size_id = s.size_id
+//                 LEFT JOIN materials m ON pv.material_id = m.material_id
+//                 LEFT JOIN brands b ON pv.brand_id = b.brand_id
+//                 LEFT JOIN categories cat ON pv.category_id = cat.category_id
+//                 LEFT JOIN product_images pi ON p.product_id = pi.product_id
+// 				        LEFT JOIN reviews r ON r.product_id = p.product_id
+//                 WHERE p.product_id = ?
+//                 GROUP BY 
+//                   p.product_id,
+//                   p.product_name,
+//                   p.description,
+//                   p.discount,
+//                   pv.price,
+//                   b.brand_id,
+//                   b.brand_name,
+//                   cat.category_id,
+//                   cat.category_name
+//                 LIMIT 1;`
+//     connection.query(query, [id], (err, results) => {
+//       if (err) reject(err);
+//       else resolve(results[0] || null);
+//     });
+//   });
+// };
 export const getProductById = (id) => {
   return new Promise((resolve, reject) => {
-    const query = `SELECT 
-                    p.product_id,
-                    p.product_name,
-                    p.description,
-                    p.discount,
-                    (pv.price * (1 - p.discount / 100)) AS final_price,
-                    pv.price,
-                    
-                    b.brand_id, 
-                    b.brand_name AS brand,
+    // Tăng giới hạn độ dài chuỗi cho GROUP_CONCAT
+    connection.query('SET SESSION group_concat_max_len = 1000000', (err) => {
+      if (err) return reject(err);
 
-                    cat.category_id, 
-                    cat.category_name AS category,
+      const query = `SELECT 
+        p.product_id,
+        p.product_name,
+        p.description,
+        p.discount,
+        (pv.price * (1 - p.discount / 100)) AS final_price,
+        pv.price,
+        b.brand_id, 
+        b.brand_name AS brand,
+        cat.category_id, 
+        cat.category_name AS category,
+        GROUP_CONCAT(DISTINCT pi.product_image_url) AS product_images,
+        CONCAT(
+          '[',
+          GROUP_CONCAT(
+            JSON_OBJECT(
+              'variant_id', IFNULL(pv.variant_id, 0),
+              'color_id', IFNULL(c.color_id, 0),
+              'color', IFNULL(c.color_code, ''),
+              'color_name', IFNULL(c.color_name, ''),
+              'size_id', IFNULL(s.size_id, 0),
+              'size', IFNULL(s.size_name, ''),
+              'material_id', IFNULL(m.material_id, 0),
+              'material', IFNULL(m.material_name, ''),
+              'image_url', IFNULL(pv.image_url, ''),
+              'quantity', IFNULL(pv.quantity, 0)
+            ) 
+            ORDER BY pv.variant_id SEPARATOR ','
+          ),
+          ']'
+        ) AS variants,
+        ROUND(AVG(r.rating), 1) AS avg_rating,
+        COUNT(DISTINCT r.review_id) AS review_count
+      FROM products p
+      LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.variant_id IS NOT NULL
+      LEFT JOIN colors c ON pv.color_id = c.color_id
+      LEFT JOIN sizes s ON pv.size_id = s.size_id
+      LEFT JOIN materials m ON pv.material_id = m.material_id
+      LEFT JOIN brands b ON pv.brand_id = b.brand_id
+      LEFT JOIN categories cat ON pv.category_id = cat.category_id
+      LEFT JOIN product_images pi ON p.product_id = pi.product_id
+      LEFT JOIN reviews r ON r.product_id = p.product_id
+      WHERE p.product_id = ?
+      GROUP BY 
+        p.product_id,
+        p.product_name,
+        p.description,
+        p.discount,
+        pv.price,
+        b.brand_id,
+        b.brand_name,
+        cat.category_id,
+        cat.category_name
+      LIMIT 1;`;
 
-                    GROUP_CONCAT(DISTINCT pi.product_image_url) AS product_images,
-
-                    CONCAT(
-                      '[',
-                      GROUP_CONCAT(
-                        JSON_OBJECT(
-                          'variant_id', IFNULL(pv.variant_id, 0),
-                          'color_id', IFNULL(c.color_id, 0),
-                          'color', IFNULL(c.color_code, ''),
-                          'color_name', IFNULL(c.color_name, ''),
-                          'size_id', IFNULL(s.size_id, 0),
-                          'size', IFNULL(s.size_name, ''),
-                          'material_id', IFNULL(m.material_id, 0),
-                          'material', IFNULL(m.material_name, ''),
-                          'image_url', IFNULL(pv.image_url, ''),
-                          'quantity', IFNULL(pv.quantity, 0)
-                        ) 
-                        ORDER BY pv.variant_id SEPARATOR ','
-                      ),
-                      ']'
-                    ) AS variants,
-                    
-                    ROUND(AVG(r.rating), 1) AS avg_rating,
-                    COUNT(DISTINCT r.review_id) AS review_count
-
-                FROM products p
-                LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.variant_id IS NOT NULL
-                LEFT JOIN colors c ON pv.color_id = c.color_id
-                LEFT JOIN sizes s ON pv.size_id = s.size_id
-                LEFT JOIN materials m ON pv.material_id = m.material_id
-                LEFT JOIN brands b ON pv.brand_id = b.brand_id
-                LEFT JOIN categories cat ON pv.category_id = cat.category_id
-                LEFT JOIN product_images pi ON p.product_id = pi.product_id
-				        LEFT JOIN reviews r ON r.product_id = p.product_id
-                WHERE p.product_id = ?
-                GROUP BY 
-                  p.product_id,
-                  p.product_name,
-                  p.description,
-                  p.discount,
-                  pv.price,
-                  b.brand_id,
-                  b.brand_name,
-                  cat.category_id,
-                  cat.category_name
-                LIMIT 1;`
-    connection.query(query, [id], (err, results) => {
-      if (err) reject(err);
-      else resolve(results[0] || null);
+      connection.query(query, [id], (err, results) => {
+        if (err) reject(err);
+        else resolve(results[0] || null);
+      });
     });
   });
 };
