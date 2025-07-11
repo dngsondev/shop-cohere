@@ -245,20 +245,24 @@ export const getProductById = (id) => {
 
                     GROUP_CONCAT(DISTINCT pi.product_image_url) AS product_images,
 
-                    CONCAT('[', GROUP_CONCAT(
+                    CONCAT(
+                      '[',
+                      GROUP_CONCAT(
                         DISTINCT JSON_OBJECT(
-                            'variant_id', pv.variant_id,
-                            'color_id', c.color_id,
-                            'color', c.color_code,
-                            'color_name', c.color_name,
-                            'size_id', s.size_id,
-                            'size', s.size_name,
-                            'material_id', m.material_id,
-                            'material', m.material_name,
-                            'image_url', pv.image_url,
-                            "quantity", pv.quantity
-                        )
-                    ), ']') AS variants,
+                          'variant_id', IFNULL(pv.variant_id, 0),
+                          'color_id', IFNULL(c.color_id, 0),
+                          'color', IFNULL(c.color_code, ''),
+                          'color_name', IFNULL(c.color_name, ''),
+                          'size_id', IFNULL(s.size_id, 0),
+                          'size', IFNULL(s.size_name, ''),
+                          'material_id', IFNULL(m.material_id, 0),
+                          'material', IFNULL(m.material_name, ''),
+                          'image_url', IFNULL(pv.image_url, ''),
+                          'quantity', IFNULL(pv.quantity, 0)
+                        ) SEPARATOR ','
+                      ),
+                      ']'
+                    ) AS variants,
                     
                     ROUND(AVG(r.rating), 1) AS avg_rating,
                     COUNT(DISTINCT r.review_id) AS review_count
