@@ -268,7 +268,7 @@ export const getProductById = (id) => {
                     COUNT(DISTINCT r.review_id) AS review_count
 
                 FROM products p
-                LEFT JOIN product_variants pv ON p.product_id = pv.product_id
+                LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.variant_id IS NOT NULL
                 LEFT JOIN colors c ON pv.color_id = c.color_id
                 LEFT JOIN sizes s ON pv.size_id = s.size_id
                 LEFT JOIN materials m ON pv.material_id = m.material_id
