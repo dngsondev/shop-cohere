@@ -23,7 +23,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors({
-    origin: '*',
+    // origin: '*',
+    origin: ['https://shop-cohere.vercel.app', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true

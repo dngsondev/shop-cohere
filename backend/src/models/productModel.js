@@ -247,7 +247,7 @@ export const getProductById = (id) => {
                     CONCAT(
                       '[',
                       GROUP_CONCAT(
-                        DISTINCT JSON_OBJECT(
+                        JSON_OBJECT(
                           'variant_id', IFNULL(pv.variant_id, 0),
                           'color_id', IFNULL(c.color_id, 0),
                           'color', IFNULL(c.color_code, ''),
@@ -258,7 +258,7 @@ export const getProductById = (id) => {
                           'material', IFNULL(m.material_name, ''),
                           'image_url', IFNULL(pv.image_url, ''),
                           'quantity', IFNULL(pv.quantity, 0)
-                        ) SEPARATOR ','
+                        ) ORDER BY pv.variant_id SEPARATOR ','
                       ),
                       ']'
                     ) AS variants,
