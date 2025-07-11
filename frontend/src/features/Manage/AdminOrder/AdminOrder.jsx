@@ -27,6 +27,8 @@ function AdminOrder() {
         sortBy: 'created_at',
         sortOrder: 'desc'
     });
+    const [currentPage, setCurrentPage] = useState(1);
+    const ORDERS_PER_PAGE = 10;
     // const [showFilters, setShowFilters] = useState(false);
 
     const fetchOrders = async () => {
@@ -110,6 +112,18 @@ function AdminOrder() {
 
         setFilteredOrders(filtered);
     }, [orders, searchTerm, filters]);
+
+    // Reset về trang 1 khi filter/search thay đổi
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [orders, searchTerm, filters]);
+
+    // Tính toán phân trang
+    const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
+    const paginatedOrders = filteredOrders.slice(
+        (currentPage - 1) * ORDERS_PER_PAGE,
+        currentPage * ORDERS_PER_PAGE
+    );
 
     // Hàm kiểm tra đơn hàng có tính vào doanh thu không
     const isValidRevenueOrder = (order) => {
@@ -279,7 +293,7 @@ function AdminOrder() {
                 />
             )} */}
 
-            {/* Results Summary với doanh thu chính xác */}
+            {/* Results Summary */}
             <div className={styles.adminOrder__summary}>
                 <div className={styles.adminOrder__summaryItem}>
                     <span>Hiển thị:</span>
@@ -307,10 +321,35 @@ function AdminOrder() {
                 </div>
             </div>
 
+            {/* Pagination Controls */}
+            <div className={styles.adminOrder__pagination}>
+                <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                >
+                    &lt;
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                        key={i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={currentPage === i + 1 ? styles.active : ""}
+                    >
+                        {i + 1}
+                    </button>
+                ))}
+                <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                >
+                    &gt;
+                </button>
+            </div>
+
             {/* Order Table */}
             <div className={styles.adminOrder__table}>
                 <OrderTable
-                    orders={filteredOrders}
+                    orders={paginatedOrders}
                     loading={loading}
                     onRefresh={fetchOrders}
                 />

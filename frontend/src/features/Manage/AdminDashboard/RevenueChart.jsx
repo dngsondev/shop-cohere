@@ -25,10 +25,17 @@ function RevenueChart() {
                 filters.endDate,
                 filters.groupBy
             );
+            console.log('Revenue API response:', response.data); // Thêm dòng này
 
             if (response.data.success) {
                 const { summary, chartData: rawData } = response.data.data;
-                setSummary(summary);
+                setSummary({
+                    ...summary,
+                    // Sửa lại average_order_value nếu cần
+                    average_order_value: summary.completed_orders > 0
+                        ? summary.confirmed_revenue / summary.completed_orders
+                        : 0
+                });
 
                 const labels = rawData.map(item => {
                     const period = item.period;
@@ -275,6 +282,51 @@ function RevenueChart() {
                     </div>
                 )}
             </div>
+
+            {/* Top Products */}
+            {/* 
+<div className={styles.topProducts}>
+    <h3 className={styles.topProducts__title}>🌟 Sản phẩm bán chạy nhất</h3>
+    <div className={styles.topProducts__list}>
+        {topProducts.length === 0 ? (
+            <div className={styles.topProducts__noData}>Không có dữ liệu sản phẩm</div>
+        ) : (
+            topProducts.map((product, index) => (
+                <div key={index} className={styles.topProducts__item}>
+                    <div className={styles.topProducts__itemLeft}>
+                        <div className={styles.topProducts__rank}>{index + 1}</div>
+                        <img
+                            src={product.image_url || '/placeholder.jpg'}
+                            alt={product.product_name}
+                            className={styles.topProducts__image}
+                        />
+                        <div className={styles.topProducts__info}>
+                            <p className={styles.topProducts__name}>{product.product_name}</p>
+                            <p className={styles.topProducts__id}>ID: {product.product_id}</p>
+                        </div>
+                    </div>
+                    <div className={styles.topProducts__stats}>
+                        <p className={styles.topProducts__price}>
+                            {formatCurrency(product.final_price || product.price || 0)}
+                        </p>
+                        <p className={styles.topProducts__stock}>
+                            Đã bán: {product.total_sold || 0}
+                        </p>
+                        <p className={styles.topProducts__stock}>
+                            Tồn kho: {product.total_stock ?? 0}
+                        </p>
+                        <p className={styles.topProducts__rating}>
+                            {Number(product.average_rating || 0) === 0
+                                ? 'Không có đánh giá'
+                                : `Đánh giá: ${Number(product.average_rating || 0).toFixed(1)} / 5 ⭐`}
+                        </p>
+                    </div>
+                </div>
+            ))
+        )}
+    </div>
+</div>
+*/}
         </div>
     );
 }

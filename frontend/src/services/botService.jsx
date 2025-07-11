@@ -10,15 +10,15 @@ const botService = {
     // API mới cho sendMessage với context đầy đủ
     sendMessage: (data) => {
         return axios.post(API_URL + '/sendMessage', {
-            message: data.message,
             userId: data.userId,
-            productId: data.productId
+            productId: data.productId,
+            messages: data.messages // chỉ gửi mảng messages
         });
     },
 
     // API cho question suggestions
     getQuestionSuggestions: (infor) => axios.get(`${API_URL}/getQuestionSuggestions`, {
-        params: infor,
+        params: { message: infor.message },
     })
 };
 

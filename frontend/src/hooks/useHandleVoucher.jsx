@@ -176,7 +176,7 @@ export const useVoucherHandler = (initialVoucherCode = '', products = []) => {
                 return true;
             } else {
                 setVoucherInfo(null);
-                setError(response.data?.message || "Mã giảm giá không hợp lệ!");
+                setError("Mã giảm giá không hợp lệ!");
                 setIsValidated(false);
             }
         } catch (error) {
@@ -185,7 +185,7 @@ export const useVoucherHandler = (initialVoucherCode = '', products = []) => {
 
             if (error.response) {
                 // Server trả về lỗi
-                setError(error.response.data?.message || "Mã giảm giá không hợp lệ!");
+                setError("Mã giảm giá không hợp lệ!");
             } else if (error.request) {
                 // Không thể kết nối server
                 setError("Không thể kết nối đến server. Vui lòng thử lại!");

@@ -6,136 +6,155 @@ import { getInforToSuggestQuestions } from '../models/cohereModels.js';
 // Bộ nhớ lưu hội thoại trước đó
 let chatHistory = [];
 
-export const sendToCohere = async (req, res) => {
-    try {
-        let mentioned_product_id_end = [];
-        const { question } = req.body;
+// export const sendToCohere = async (req, res) => {
+//     try {
+//         let mentioned_product_id_end = [];
+//         const { question } = req.body;
 
-        // Cập nhật lịch sử hội thoại
-        if (question) {
-            chatHistory.push(`Người dùng: ${question}`);
-        }
+//         // Cập nhật lịch sử hội thoại
+//         if (question) {
+//             chatHistory.push(`Người dùng: ${question}`);
+//         }
 
-        // Giữ lại 5 câu gần nhất từ lịch sử hội thoại
-        const conversationContext = chatHistory.slice(-5).join("\n");
+//         // Giữ lại 5 câu gần nhất từ lịch sử hội thoại
+//         const conversationContext = chatHistory.slice(-5).join("\n");
 
-        const command = await getCommand();
-        console.log("Command:", command[0].contents);
+//         const command = await getCommand();
+//         console.log("Command:", command[0].contents);
 
-        // Lấy tất cả thông tin sản phẩm từ MySQL
-        const products = await getInforToCohere();
+//         // Lấy tất cả thông tin sản phẩm từ MySQL
+//         const products = await getInforToCohere();
 
-        // Tạo thông tin sản phẩm dưới dạng chuỗi liền mạch
-        const productInfo = products.map(product =>
-            Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
-        ).join('\n');
+//         // Tạo thông tin sản phẩm dưới dạng chuỗi liền mạch
+//         const productInfo = products.map(product =>
+//             Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
+//         ).join('\n');
 
-        const prompt = `${command[0].contents}
-            Bạn là chatbot bán quần áo và là 1 nhân viên tư vấn chuyên nghiệp. 
-            Do là 1 nhân viên tư vấn chuyên nghiệp nên bạn không chỉ mỗi trả lời câu hỏi của khách hàng mà còn tư vấn các sản phẩm phù hợp với nhu cầu của khách hàng.
-            Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cảnh hay những thứ liên quan đến câu hỏi.
-            Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
-            Trả lời ngắn gọn, dưới 200 từ.  
-            Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
-            Không được nói về những thứ bạn không có dữ liệu được cung cấp từ shop như: chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,...
-            Thay vào đó hãy gọi khách hàng liên hệ với nhân viên chăm sóc khách hàng của shop.
-            
-            Dữ liệu sản phẩm:  
-            ${productInfo}
+//         const prompt = `${command[0].contents}
+//             Bạn là chatbot bán quần áo và là 1 nhân viên tư vấn chuyên nghiệp. 
+//             Do là 1 nhân viên tư vấn chuyên nghiệp nên bạn không chỉ mỗi trả lời câu hỏi của khách hàng mà còn tư vấn các sản phẩm phù hợp với nhu cầu của khách hàng.
+//             Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cảnh hay những thứ liên quan đến câu hỏi.
+//             Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
+//             Trả lời ngắn gọn, dưới 200 từ.  
+//             Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
+//             Không được nói về những thứ bạn không có dữ liệu được cung cấp từ shop như: chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,...
+//             Thay vào đó hãy gọi khách hàng liên hệ với nhân viên chăm sóc khách hàng của shop.
 
-            Lịch sử hội thoại:  
-            ${conversationContext}
+//             Dữ liệu sản phẩm:  
+//             ${productInfo}
 
-            QUY TẮC ĐÁNH DẤU SẢN PHẨM:
-            - Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC phải đánh dấu sản phẩm đó bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM>TÊN_SẢN_PHẨM</PRODUCT|ID: ID_SẢN_PHẨM>
-            - CHỈ đánh dấu TÊN SẢN PHẨM bên trong tag, KHÔNG bao gồm màu sắc, kích thước, giá cả hay bất kỳ thông tin mô tả nào khác
-            - Các thông tin về màu sắc, kích thước, giá cả phải được viết BÊN NGOÀI tag
-            - Mỗi sản phẩm chỉ được đánh dấu tag MỘT LẦN trong toàn bộ câu trả lời
-            - Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả
+//             Lịch sử hội thoại:  
+//             ${conversationContext}
 
-            VÍ DỤ ĐÚNG:
-            "Tôi giới thiệu <PRODUCT|ID: 75>Áo Thun Teelab Local Brand Unisex Premium Cotton 380gsm TS268</PRODUCT|ID: 75> với nhiều màu sắc như đen, be, nâu và xanh khói, giá chỉ 420.000đ"
+//             QUY TẮC ĐÁNH DẤU SẢN PHẨM:
+//             - Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC phải đánh dấu sản phẩm đó bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM>TÊN_SẢN_PHẨM</PRODUCT|ID: ID_SẢN_PHẨM>
+//             - CHỈ đánh dấu TÊN SẢN PHẨM bên trong tag, KHÔNG bao gồm màu sắc, kích thước, giá cả hay bất kỳ thông tin mô tả nào khác
+//             - Các thông tin về màu sắc, kích thước, giá cả phải được viết BÊN NGOÀI tag
+//             - Mỗi sản phẩm chỉ được đánh dấu tag MỘT LẦN trong toàn bộ câu trả lời
+//             - Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả
 
-            VÍ DỤ SAI (TUYỆT ĐỐI KHÔNG LÀM):
-            "Tôi giới thiệu <PRODUCT|ID: 75>Áo Thun Teelab Local Brand Unisex Premium Cotton 380gsm TS268 với màu đen, be, nâu và xanh khói</PRODUCT|ID: 75>"
+//             VÍ DỤ ĐÚNG:
+//             "Tôi giới thiệu <PRODUCT|ID: 75>Áo Thun Teelab Local Brand Unisex Premium Cotton 380gsm TS268</PRODUCT|ID: 75> với nhiều màu sắc như đen, be, nâu và xanh khói, giá chỉ 420.000đ"
 
-            LƯUÝ QUAN TRỌNG:
-            - KHÔNG được đưa thông tin màu sắc (đen, be, nâu, xanh, v.v.) vào trong tag <PRODUCT>
-            - KHÔNG được đưa thông tin kích thước (S, M, L, XL, v.v.) vào trong tag <PRODUCT>  
-            - KHÔNG được đưa thông tin giá cả vào trong tag <PRODUCT>
-            - CHỈ có tên chính thức của sản phẩm được phép nằm trong tag
+//             VÍ DỤ SAI (TUYỆT ĐỐI KHÔNG LÀM):
+//             "Tôi giới thiệu <PRODUCT|ID: 75>Áo Thun Teelab Local Brand Unisex Premium Cotton 380gsm TS268 với màu đen, be, nâu và xanh khói</PRODUCT|ID: 75>"
 
-            Câu hỏi: ${question}  
-            Trả lời:
-            `;
+//             LƯUÝ QUAN TRỌNG:
+//             - KHÔNG được đưa thông tin màu sắc (đen, be, nâu, xanh, v.v.) vào trong tag <PRODUCT>
+//             - KHÔNG được đưa thông tin kích thước (S, M, L, XL, v.v.) vào trong tag <PRODUCT>  
+//             - KHÔNG được đưa thông tin giá cả vào trong tag <PRODUCT>
+//             - CHỈ có tên chính thức của sản phẩm được phép nằm trong tag
 
-        // Gửi yêu cầu đến Cohere
-        const response = await cohere.chat({
-            model: 'command-r-plus',
-            message: prompt,
-            max_tokens: 300,
-            temperature: 0.7,
-        });
+//             Câu hỏi: ${question}  
+//             Trả lời:
+//             `;
 
-        // Lưu phản hồi của chatbot vào lịch sử
-        let answer = response.text.trim();
-        chatHistory.push(`Bot: ${answer}`);
-        console.log("Phản hồi từ Cohere:", answer);
+//         // Gửi yêu cầu đến Cohere
+//         const response = await cohere.chat({
+//             model: 'command-r-plus',
+//             message: prompt,
+//             max_tokens: 300,
+//             temperature: 0.7,
+//         });
 
-        // Cập nhật regex để xử lý tag chính xác hơn
-        const regex = /<PRODUCT\|ID:\s*(\d+)>/g;
-        let match;
+//         // Lưu phản hồi của chatbot vào lịch sử
+//         let answer = response.text.trim();
+//         chatHistory.push(`Bot: ${answer}`);
+//         console.log("Phản hồi từ Cohere:", answer);
 
-        while ((match = regex.exec(answer)) !== null) {
-            const productId = match[1];
-            if (!mentioned_product_id_end.includes(productId)) {
-                mentioned_product_id_end.push(productId);
-            }
-        }
+//         // Cập nhật regex để xử lý tag chính xác hơn
+//         const regex = /<PRODUCT\|ID:\s*(\d+)>/g;
+//         let match;
 
-        // Xóa tag khỏi câu trả lời - cập nhật regex cho chính xác
-        answer = answer.replace(/<PRODUCT\|ID:\s*\d+>|<\/PRODUCT\|ID:\s*\d+>/g, '');
+//         while ((match = regex.exec(answer)) !== null) {
+//             const productId = match[1];
+//             if (!mentioned_product_id_end.includes(productId)) {
+//                 mentioned_product_id_end.push(productId);
+//             }
+//         }
 
-        // Nếu có sản phẩm được đề cập, lấy thông tin chi tiết theo ID
-        let mentionedProductsInfo = [];
-        if (mentioned_product_id_end.length > 0) {
-            mentionedProductsInfo = await getProductsByIdForCohere(mentioned_product_id_end);
-        }
+//         // Xóa tag khỏi câu trả lời - cập nhật regex cho chính xác
+//         answer = answer.replace(/<PRODUCT\|ID:\s*\d+>|<\/PRODUCT\|ID:\s*\d+>/g, '');
 
-        console.log("ID sản phẩm được đề cập:", mentioned_product_id_end);
-        console.log("Số sản phẩm được đề cập:", mentionedProductsInfo.length);
+//         // Nếu có sản phẩm được đề cập, lấy thông tin chi tiết theo ID
+//         let mentionedProductsInfo = [];
+//         if (mentioned_product_id_end.length > 0) {
+//             mentionedProductsInfo = await getProductsByIdForCohere(mentioned_product_id_end);
+//         }
 
-        // Trả kết quả về cho frontend kèm theo thông tin sản phẩm
-        res.json({
-            success: true,
-            cohereResponse: answer,
-            relatedProducts: mentionedProductsInfo // Trả về thông tin sản phẩm liên quan
-        });
+//         console.log("ID sản phẩm được đề cập:", mentioned_product_id_end);
+//         console.log("Số sản phẩm được đề cập:", mentionedProductsInfo.length);
 
-    } catch (error) {
-        console.error('Lỗi khi gửi dữ liệu đến Cohere:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Lỗi khi gửi dữ liệu đến Cohere',
-            error: error.message
-        });
-    }
-};
+//         // Trả kết quả về cho frontend kèm theo thông tin sản phẩm
+//         res.json({
+//             success: true,
+//             cohereResponse: answer,
+//             relatedProducts: mentionedProductsInfo // Trả về thông tin sản phẩm liên quan
+//         });
+
+//     } catch (error) {
+//         console.error('Lỗi khi gửi dữ liệu đến Cohere:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Lỗi khi gửi dữ liệu đến Cohere',
+//             error: error.message
+//         });
+//     }
+// };
 
 export const sendMessage = async (req, res) => {
     try {
-        let mentioned_product_id_end = [];
-        const { message, userId, productId } = req.body;
+        const { userId, productId, messages } = req.body;
+        let message = '';
+        if (Array.isArray(messages) && messages.length > 0) {
+            message = messages[messages.length - 1].content; // lấy nội dung tin nhắn mới nhất
+        }
 
-        console.log(`SendMessage API - UserId: ${userId}, ProductId: ${productId}, Message: ${message}`);
+        let mentioned_product_id_end = [];
+
+        // console.log("Received message:", message);
+        // console.log("User ID:", userId);
+        // console.log("Product ID:", productId);
+        console.log("Messages from frontend:", messages);
+
+
+        // Ưu tiên context từ FE nếu có
+        let conversationContext = '';
+        if (Array.isArray(messages) && messages.length > 0) {
+            conversationContext = messages.map(
+                m => `${m.sender === 'user' ? 'Người dùng' : 'Bot'}: ${m.content}`
+            ).join('\n');
+            // console.log("Conversation context from frontend:", conversationContext);
+        }
+        //  else {
+        //     // fallback: lấy từ chatHistory cục bộ
+        //     conversationContext = chatHistory.slice(-10).join("\n");
+        // }
 
         // Cập nhật lịch sử hội thoại với context người dùng
         if (message) {
             chatHistory.push(`Người dùng ${userId ? `(ID: ${userId})` : ''}: ${message}`);
         }
-
-        // Giữ lại 10 câu gần nhất từ lịch sử hội thoại
-        const conversationContext = chatHistory.slice(-10).join("\n");
 
         const command = await getCommand();
         console.log("Command:", command[0].contents);
@@ -255,81 +274,42 @@ export const sendMessage = async (req, res) => {
 
 export const getQuestionSuggestions = async (req, res) => {
     try {
-        const { userId, productId, message } = req.query;
-
-        console.log(`User ID: ${userId}, Product ID: ${productId}`);
+        const { message } = req.query;
         console.log("Message:", message);
 
-        // Lấy thông tin sản phẩm từ MySQL
-        const inforResponse = await getInforToSuggestQuestions(userId, productId);
-
-        if (!inforResponse || inforResponse.length === 0) {
-            return res.json({
-                success: true,
-                suggestions: `Sản phẩm nào đang được ưa chuộng nhất?
-Bạn có khuyến mãi gì không?
-Làm sao để chọn size phù hợp với tôi?`
-            });
-        }
-
-        const productNames = inforResponse.map(item => item.product_name).slice(0, 5);
-        const currentSeason = getCurrentSeason();
-
         let prompt = '';
-
         if (message && message.trim() !== '' && message !== 'undefined' && message !== 'null') {
-            // Có message từ user - tạo câu hỏi liên quan
             prompt = `
-                Bạn là chatbot bán quần áo chuyên nghiệp của shop thời trang DNGSON. hãy vào vai trò là khách hàng đang tò mò về sản phẩm.
-                Dựa vào tin nhắn của khách hàng, hãy đưa ra 3 câu hỏi tiếp theo mà khách hàng có thể quan tâm.
-                
-                Tin nhắn của khách hàng: "${message}"
-                
-                Các sản phẩm có sẵn: ${productNames.join(', ')}
-                Mùa hiện tại: ${currentSeason}
-                
-                Yêu cầu:
-                - Đưa ra 3 câu hỏi cụ thể, thực tế và hữu ích
-                - Câu hỏi phải liên quan trực tiếp đến tin nhắn và sản phẩm
-                - Sử dụng ngôn ngữ thân thiện, gần gũi
-                - Mỗi câu hỏi trên 1 dòng riêng biệt
-                - KHÔNG thêm số thứ tự, chỉ viết câu hỏi thuần túy
-                - Tối đa 15 từ mỗi câu
-                
-                Ví dụ format trả về:
-                Áo này có màu nào khác không?
-                Size M có vừa với người cao 1m65 không?
-                Chất liệu có co giãn tốt không?
-            `;
+Bạn là một khách hàng thực sự đang cân nhắc mua sắm tại shop thời trang DNGSON.
+Bạn vừa hỏi: "${message}"
+
+Hãy đặt ra đúng 3 câu hỏi tiếp theo mà một khách hàng thực sự sẽ hỏi về sản phẩm này trước khi quyết định mua, tập trung vào các khía cạnh thực tế như:
+- Chất liệu, cảm giác mặc, độ bền, xuất xứ
+- Tính năng nổi bật, công nghệ, phù hợp mục đích sử dụng (ví dụ: đi mưa, giữ ấm, chống nắng, phối đồ, v.v.)
+- Chính sách đổi trả, bảo hành, ưu đãi, trải nghiệm thực tế của khách hàng khác
+- Gợi ý phối đồ, màu sắc, size phù hợp với vóc dáng, phong cách
+- Cách bảo quản, giặt ủi, giữ form
+
+Yêu cầu:
+- Không hỏi lan man, không hỏi về sản phẩm khác, không hỏi thông tin chung chung
+- Không lặp lại câu hỏi đã hỏi ở trên
+- Mỗi câu hỏi trên 1 dòng riêng, không đánh số thứ tự, không thêm giải thích
+- Tối đa 15 từ mỗi câu, ngắn gọn, đúng tâm lý khách hàng
+`;
         } else {
-            // Không có message - tạo câu hỏi khởi đầu
             prompt = `
-                Bạn là chatbot bán quần áo của shop thời trang DNGSON.
-                Hãy đưa ra 3 câu hỏi gợi ý hấp dẫn để khách hàng bắt đầu cuộc trò chuyện.
-                
-                Các sản phẩm nổi bật: ${productNames.join(', ')}
-                Mùa hiện tại: ${currentSeason}
-                
-                Yêu cầu:
-                - 3 câu hỏi thú vị, thu hút khách hàng
-                - Phù hợp với mùa ${currentSeason}
-                - Liên quan đến xu hướng thời trang hiện tại
-                - Ngôn ngữ trẻ trung, thân thiện
-                - Mỗi câu hỏi trên 1 dòng riêng biệt  
-                - KHÔNG thêm số thứ tự, chỉ viết câu hỏi thuần túy
-                - Tối đa 15 từ mỗi câu
-                
-                Ví dụ câu hỏi hay:
-                ${currentSeason === 'winter' ? 'Áo khoác nào giữ ấm mà vẫn trendy?' :
-                    currentSeason === 'summer' ? 'Outfit mùa hè nào đang hot nhất?' :
-                        currentSeason === 'spring' ? 'Set đồ xuân nào dễ phối nhất?' :
-                            'Trang phục thu nào vừa ấm vừa phong cách?'}
-                Sản phẩm nào đang được giới trẻ yêu thích?
-                Size chart của shop có chuẩn không?
-            `;
+Bạn là một khách hàng lần đầu mua sắm online tại shop thời trang DNGSON.
+Hãy nghĩ như một khách hàng mới, đặt ra 3 câu hỏi mở đầu đúng tâm lý khách hàng để bắt chuyện với shop.
+
+Yêu cầu:
+- 3 câu hỏi thực tế, gần gũi, đúng tâm lý khách hàng mới
+- Gợi ý về chất liệu, cảm giác mặc, ưu đãi, phối đồ, size, đổi trả, v.v.
+- Không hỏi quá chung chung, không hỏi về thông tin shop không có
+- Mỗi câu hỏi trên 1 dòng riêng, không đánh số thứ tự
+- Tối đa 15 từ mỗi câu
+`;
         }
 
-        // Gửi yêu cầu đến Cohere
         const response = await cohere.chat({
             model: 'command-r-plus',
             message: prompt,
@@ -338,27 +318,23 @@ Làm sao để chọn size phù hợp với tôi?`
         });
 
         let suggestions = response.text.trim();
-
-        // Làm sạch suggestions
         suggestions = cleanSuggestions(suggestions);
-
-        console.log("Generated suggestions:", suggestions);
+        const suggestionArr = suggestions.split('\n').filter(Boolean);
 
         res.json({
             success: true,
-            suggestions: suggestions,
+            suggestions: suggestionArr,
         });
 
     } catch (error) {
         console.error('Lỗi khi tạo gợi ý câu hỏi:', error);
-
-        // Fallback suggestions theo mùa
-        const season = getCurrentSeason();
-        const fallbackSuggestions = getFallbackSuggestions(season);
-
         res.json({
             success: true,
-            suggestions: fallbackSuggestions,
+            suggestions: [
+                "Sản phẩm nào đang được ưa chuộng nhất?",
+                "Tôi nên chọn size như thế nào?",
+                "Có chương trình khuyến mãi nào không?"
+            ],
         });
     }
 };

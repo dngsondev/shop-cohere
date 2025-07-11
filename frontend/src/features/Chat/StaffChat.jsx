@@ -6,6 +6,18 @@ import { MdSupportAgent } from 'react-icons/md';
 import chatService from '../../services/chatService';
 import styles from './StaffChat.module.scss';
 
+// Lấy userId, nếu chưa có thì tạo userId tạm cho khách
+const getUserId = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.id) return user.id;
+    let guestId = localStorage.getItem('guest_id');
+    if (!guestId) {
+        guestId = 'guest_' + Date.now();
+        localStorage.setItem('guest_id', guestId);
+    }
+    return guestId;
+};
+
 function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onRoomCreated }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -32,7 +44,7 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
     const typingTimeout = useRef(null);
 
     // Lấy thông tin user
-    const userId = user?.id || JSON.parse(localStorage.getItem('user'))?.id || null;
+    const userId = user?.id || getUserId();
     const userName = user?.name || JSON.parse(localStorage.getItem('user'))?.name || 'Khách hàng';
 
     // Cleanup function

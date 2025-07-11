@@ -199,6 +199,46 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
+
+    &__pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+
+        button {
+            min-width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 0.5rem;
+            background: #f1f5f9;
+            color: #374151;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.04);
+
+            &:hover:not(:disabled) {
+                background: #3b82f6;
+                color: #fff;
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #e5e7eb;
+                color: #94a3b8;
+            }
+
+            &.active {
+                background: linear-gradient(135deg, #3b82f6, #6366f1);
+                color: #fff;
+                box-shadow: 0 4px 16px rgba(59, 130, 246, 0.10);
+            }
+        }
+    }
 }
 
 .spinning {

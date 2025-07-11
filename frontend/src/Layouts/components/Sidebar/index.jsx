@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     FaHome, FaComments, FaShoppingCart, FaBox, FaUsers, FaRobot,
     FaCog, FaStar, FaTicketAlt, FaChevronDown, FaChevronLeft,
-    FaChevronRight, FaSignOutAlt
+    FaChevronRight, FaSignOutAlt, FaArtstation
 } from 'react-icons/fa';
 import adminService from '../../../services/adminService';
 
@@ -87,6 +87,11 @@ function Sidebar() {
             path: '/admin/review-reply',
             icon: FaStar,
             label: 'Trả lời đánh giá'
+        },
+        {
+            path: '/admin/collections',
+            icon: FaArtstation,
+            label: 'Quản lí Collections'
         },
         // CHỈ hiển thị cho Super Admin (role = 0)
         ...(isSuperAdmin ? [{

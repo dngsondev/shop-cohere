@@ -14,8 +14,11 @@ function ProductRow({ product, onEdit, onDelete }) {
         target_name: 'Loading...'
     });
 
+    // console.log("ProductRow - product:", product);
+
+
     const finalPrice = product.price * (1 - product.discount / 100);
-    const imageUrl = getFullImageUrl(product.variant_image_url);
+    const imageUrl = product.variant_image_url ? getFullImageUrl(product.variant_image_url) : getFullImageUrl(product.product_image_url);
 
     useEffect(() => {
         const fetchDisplayNames = async () => {

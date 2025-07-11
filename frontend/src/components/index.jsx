@@ -1,7 +1,6 @@
 export { default as Banner } from './Banners/Banner';
 export { default as EditDeliveryModal } from './EditDeliveryModal/EditDeliveryModal';
 export { default as DeliveryInfoList } from './EditDeliveryModal/DeliveryInfoList'
-export { default as VerifyPhone } from './VerifyPhone/VerifyPhone';
 export { default as RatingStars } from './RatingStars/RatingStars';
 export { default as ProductCard } from './ProductCard/ProductCard';
 export { default as SizeTable } from './SizeTable/SizeTable';

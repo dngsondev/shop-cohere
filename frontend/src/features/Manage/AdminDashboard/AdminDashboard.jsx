@@ -22,14 +22,14 @@ import {
     Legend,
 } from 'chart.js';
 import adminService from '../../../services/adminService';
-import productService from '../../../services/productService';
+// import productService from '../../../services/productService';
 import RevenueChart from './RevenueChart';
 
 import { getFullImageUrl } from '../../../utils/imageUtils';
 
 import styles from './AdminDashboard.module.scss';
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun } from 'docx';
-import { saveAs } from 'file-saver';
+// import { saveAs } from 'file-saver';
 import { exportDashboardReport } from './exportDashboardReport';
 
 // Register Chart.js components
@@ -58,11 +58,13 @@ function AdminDashboard() {
         revenueGrowth: 0
     });
 
-    const [chartData, setChartData] = useState({
-        revenueChart: null
-    });
+    // const [chartData, setChartData] = useState({
+    //     revenueChart: null
+    // });
 
     const [topProducts, setTopProducts] = useState([]);
+    const [loadingTopProducts, setLoadingTopProducts] = useState(false);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -70,134 +72,197 @@ function AdminDashboard() {
     const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
+    // Đưa hàm fetchDashboardData ra ngoài useEffect
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        try {
+            // All time stats (khung đen)
+            const allTimeRes = await adminService.getDashboardStatsAllTime();
+            const allTime = allTimeRes?.data?.data || {};
+
+            // By month stats (khung vàng)
+            const statsRes = await adminService.getDashboardStatsByMonth(selectedMonth, selectedYear);
+            const stats = statsRes?.data?.data || {};
+
+            setDashboardData({
+                // All time
+                totalOrders: allTime.total_orders || 0,
+                totalUsers: allTime.total_users || 0,
+                totalProducts: allTime.total_products || 0,
+                totalRevenue: allTime.total_revenue || 0,
+                totalReviews: allTime.total_reviews || 0,
+                averageRating: allTime.average_rating || 0,
+
+                // By month
+                pendingOrders: stats.pending_orders || 0,
+                ordersThisMonth: stats.orders_this_month || 0,
+                ordersGrowth: stats.orders_growth || 0,
+                usersThisMonth: stats.users_this_month || 0,
+                usersGrowth: stats.users_growth || 0,
+                productsThisMonth: stats.products_this_month || 0,
+                productsGrowth: stats.products_growth || 0,
+                revenueThisMonth: stats.revenue_this_month || 0,
+                revenueGrowth: stats.revenue_growth || 0,
+                reviewsThisMonth: stats.reviews_this_month || 0,
+                reviewsGrowth: stats.reviews_growth || 0,
+            });
+            setLoading(false);
+        } catch (err) {
+            setError('Lỗi lấy dữ liệu dashboard');
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+        fetchTopProducts(selectedMonth, selectedYear, 10);
+    }, [selectedMonth, selectedYear]);
 
-    const fetchDashboardData = async () => {
+    // const fetchDashboardData = async () => {
+    //     try {
+    //         setLoading(true);
+    //         setError(null);
+
+    //         const statsResponse = await adminService.getDashboardStats();
+
+    //         // ✅ DEBUG: Log toàn bộ response
+    //         console.log('🔍 FULL API Response:', statsResponse);
+    //         console.log('🔍 Response Status:', statsResponse.status);
+    //         console.log('🔍 Response Data:', statsResponse.data);
+    //         console.log('🔍 Response Data.data:', statsResponse.data?.data);
+
+    //         if (statsResponse?.data?.data) {
+    //             const backendData = statsResponse.data.data;
+
+    //             // ✅ DEBUG: Log growth values với type
+    //             console.log('📊 Backend Growth Values:', {
+    //                 revenueGrowth: {
+    //                     value: backendData.revenueGrowth,
+    //                     type: typeof backendData.revenueGrowth
+    //                 },
+    //                 orderGrowth: {
+    //                     value: backendData.orderGrowth,
+    //                     type: typeof backendData.orderGrowth
+    //                 },
+    //                 userGrowth: {
+    //                     value: backendData.userGrowth,
+    //                     type: typeof backendData.userGrowth
+    //                 },
+    //                 productGrowth: {
+    //                     value: backendData.productGrowth,
+    //                     type: typeof backendData.productGrowth
+    //                 }
+    //             });
+
+    //             const newDashboardData = {
+    //                 totalOrders: parseInt(backendData.totalOrders) || 0,
+    //                 totalUsers: parseInt(backendData.totalUsers) || 0,
+    //                 totalProducts: parseInt(backendData.totalProducts) || 0,
+    //                 totalRevenue: parseFloat(backendData.totalRevenue) || 0,
+    //                 pendingOrders: parseInt(backendData.pendingOrders) || 0,
+    //                 totalReviews: parseInt(backendData.totalReviews) || 0,
+    //                 averageRating: parseFloat(backendData.averageRating) || 0,
+    //                 todayRevenue: parseFloat(backendData.todayRevenue) || 0,
+    //                 todayOrders: parseInt(backendData.todayOrders) || 0,
+    //                 newUsersToday: parseInt(backendData.newUsersToday) || 0,
+    //                 monthRevenue: parseFloat(backendData.monthRevenue) || 0,
+    //                 // ✅ KIỂM TRA: Growth values
+    //                 revenueGrowth: parseFloat(backendData.revenueGrowth) || 0,
+    //                 orderGrowth: parseFloat(backendData.orderGrowth) || 0,
+    //                 userGrowth: parseFloat(backendData.userGrowth) || 0,
+    //                 productGrowth: parseFloat(backendData.productGrowth) || 0
+    //             };
+
+    //             // ✅ DEBUG: Log final dashboard data
+    //             console.log('📊 Final Dashboard Data:', {
+    //                 revenueGrowth: newDashboardData.revenueGrowth,
+    //                 orderGrowth: newDashboardData.orderGrowth,
+    //                 userGrowth: newDashboardData.userGrowth,
+    //                 productGrowth: newDashboardData.productGrowth
+    //             });
+
+    //             setDashboardData(newDashboardData);
+    //         } else {
+    //             console.error('❌ No data received from API');
+    //         }
+
+    //         // Fetch orders for chart
+    //         let orders = [];
+    //         try {
+    //             const ordersResponse = await adminService.getAllOrders();
+    //             if (ordersResponse?.data?.orders) {
+    //                 orders = Array.isArray(ordersResponse.data.orders) ? ordersResponse.data.orders : [];
+    //             }
+    //         } catch (error) {
+    //             console.error('❌ Error fetching orders:', error);
+    //             orders = [];
+    //         }
+
+    //         // Fetch products
+    //         let products = [];
+    //         try {
+    //             const productsResponse = await adminService.getAllProducts();
+    //             if (productsResponse?.data?.products) {
+    //                 products = Array.isArray(productsResponse.data.products) ? productsResponse.data.products : [];
+    //             }
+    //         } catch (error) {
+    //             console.error('❌ Error fetching products:', error);
+    //             try {
+    //                 const fallbackResponse = await productService.getAllInfoProducts();
+    //                 if (fallbackResponse?.data && Array.isArray(fallbackResponse.data)) {
+    //                     products = fallbackResponse.data;
+    //                 }
+    //             } catch (fallbackError) {
+    //                 products = [];
+    //                 console.error('❌ Error fetching fallback products:', fallbackError);
+    //             }
+    //         }
+
+    //         // LẤY TOP PRODUCTS ĐÚNG API
+    //         let topProductsArr = [];
+    //         try {
+    //             const topProductsResponse = await adminService.getTopProducts(8);
+    //             console.log('🔍 Top Products Response:', topProductsResponse);
+
+    //             if (topProductsResponse?.data?.data) {
+    //                 topProductsArr = Array.isArray(topProductsResponse.data.data)
+    //                     ? topProductsResponse.data.data
+    //                     : [];
+    //             }
+    //         } catch (error) {
+    //             console.error('❌ Error fetching top products:', error);
+    //             topProductsArr = [];
+    //         }
+    //         setTopProducts(topProductsArr);
+
+    //         prepareRevenueChart(orders);
+
+    //     } catch (error) {
+    //         console.error('❌ Dashboard Error:', error);
+    //         setError('Không thể tải dữ liệu dashboard: ' + error.message);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const fetchTopProducts = async (month, year, limit = 10) => {
+        setLoadingTopProducts(true);
         try {
-            setLoading(true);
-            setError(null);
-
-            const statsResponse = await adminService.getDashboardStats();
-
-            // ✅ DEBUG: Log toàn bộ response
-            console.log('🔍 FULL API Response:', statsResponse);
-            console.log('🔍 Response Status:', statsResponse.status);
-            console.log('🔍 Response Data:', statsResponse.data);
-            console.log('🔍 Response Data.data:', statsResponse.data?.data);
-
-            if (statsResponse?.data?.data) {
-                const backendData = statsResponse.data.data;
-
-                // ✅ DEBUG: Log growth values với type
-                console.log('📊 Backend Growth Values:', {
-                    revenueGrowth: {
-                        value: backendData.revenueGrowth,
-                        type: typeof backendData.revenueGrowth
-                    },
-                    orderGrowth: {
-                        value: backendData.orderGrowth,
-                        type: typeof backendData.orderGrowth
-                    },
-                    userGrowth: {
-                        value: backendData.userGrowth,
-                        type: typeof backendData.userGrowth
-                    },
-                    productGrowth: {
-                        value: backendData.productGrowth,
-                        type: typeof backendData.productGrowth
-                    }
-                });
-
-                const newDashboardData = {
-                    totalOrders: parseInt(backendData.totalOrders) || 0,
-                    totalUsers: parseInt(backendData.totalUsers) || 0,
-                    totalProducts: parseInt(backendData.totalProducts) || 0,
-                    totalRevenue: parseFloat(backendData.totalRevenue) || 0,
-                    pendingOrders: parseInt(backendData.pendingOrders) || 0,
-                    totalReviews: parseInt(backendData.totalReviews) || 0,
-                    averageRating: parseFloat(backendData.averageRating) || 0,
-                    todayRevenue: parseFloat(backendData.todayRevenue) || 0,
-                    todayOrders: parseInt(backendData.todayOrders) || 0,
-                    newUsersToday: parseInt(backendData.newUsersToday) || 0,
-                    monthRevenue: parseFloat(backendData.monthRevenue) || 0,
-                    // ✅ KIỂM TRA: Growth values
-                    revenueGrowth: parseFloat(backendData.revenueGrowth) || 0,
-                    orderGrowth: parseFloat(backendData.orderGrowth) || 0,
-                    userGrowth: parseFloat(backendData.userGrowth) || 0,
-                    productGrowth: parseFloat(backendData.productGrowth) || 0
-                };
-
-                // ✅ DEBUG: Log final dashboard data
-                console.log('📊 Final Dashboard Data:', {
-                    revenueGrowth: newDashboardData.revenueGrowth,
-                    orderGrowth: newDashboardData.orderGrowth,
-                    userGrowth: newDashboardData.userGrowth,
-                    productGrowth: newDashboardData.productGrowth
-                });
-
-                setDashboardData(newDashboardData);
-            } else {
-                console.error('❌ No data received from API');
-            }
-
-            // Fetch orders for chart
-            let orders = [];
-            try {
-                const ordersResponse = await adminService.getAllOrders();
-                if (ordersResponse?.data?.orders) {
-                    orders = Array.isArray(ordersResponse.data.orders) ? ordersResponse.data.orders : [];
-                }
-            } catch (error) {
-                console.error('❌ Error fetching orders:', error);
-                orders = [];
-            }
-
-            // Fetch products
-            let products = [];
-            try {
-                const productsResponse = await adminService.getAllProducts();
-                if (productsResponse?.data?.products) {
-                    products = Array.isArray(productsResponse.data.products) ? productsResponse.data.products : [];
-                }
-            } catch (error) {
-                console.error('❌ Error fetching products:', error);
-                try {
-                    const fallbackResponse = await productService.getAllInfoProducts();
-                    if (fallbackResponse?.data && Array.isArray(fallbackResponse.data)) {
-                        products = fallbackResponse.data;
-                    }
-                } catch (fallbackError) {
-                    products = [];
-                    console.error('❌ Error fetching fallback products:', fallbackError);
-                }
-            }
-
-            // LẤY TOP PRODUCTS ĐÚNG API
-            let topProductsArr = [];
-            try {
-                const topProductsResponse = await adminService.getTopProducts(8);
-                console.log('🔍 Top Products Response:', topProductsResponse);
-
-                if (topProductsResponse?.data?.data) {
-                    topProductsArr = Array.isArray(topProductsResponse.data.data)
-                        ? topProductsResponse.data.data
+            const response = await adminService.getTopProducts(month, year, limit);
+            if (response.data.success) {
+                const products = Array.isArray(response.data.data.products)
+                    ? response.data.data.products
+                    : Array.isArray(response.data.data)
+                        ? response.data.data
                         : [];
-                }
-            } catch (error) {
-                console.error('❌ Error fetching top products:', error);
-                topProductsArr = [];
+                setTopProducts(products);
+            } else {
+                setTopProducts([]);
             }
-            setTopProducts(topProductsArr);
-
-            prepareRevenueChart(orders);
-
         } catch (error) {
-            console.error('❌ Dashboard Error:', error);
-            setError('Không thể tải dữ liệu dashboard: ' + error.message);
+            setTopProducts([]);
         } finally {
-            setLoading(false);
+            setLoadingTopProducts(false);
         }
     };
 
@@ -329,20 +394,30 @@ function AdminDashboard() {
             label: 'Tổng đơn hàng',
             value: formatNumber(dashboardData.totalOrders),
             icon: FaShoppingCart,
-            meta: `${dashboardData.pendingOrders} đang chờ xử lý`,
-            metaType: 'warning',
+            meta: (
+                <>
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>
+                        {dashboardData.ordersThisMonth || 0} mới tháng này
+                    </span>
+
+                    <span style={{ color: '#f59e0b', fontWeight: 600 }}>
+                        {', '}{dashboardData.pendingOrders || 0} đang chờ xử lý
+                    </span>
+                </>
+            ),
+            metaType: '',
             className: 'orders',
-            trend: dashboardData.orderGrowth, // ✅ Kiểm tra giá trị này
+            trend: dashboardData.ordersGrowth,
             trendLabel: 'so với tháng trước'
         },
         {
             label: 'Tổng khách hàng',
             value: formatNumber(dashboardData.totalUsers),
             icon: FaUsers,
-            meta: `${dashboardData.newUsersToday} mới hôm nay`,
+            meta: `${dashboardData.usersThisMonth || 0} mới tháng này`,
             metaType: 'success',
             className: 'users',
-            trend: dashboardData.userGrowth, // ✅ Kiểm tra giá trị này
+            trend: dashboardData.usersGrowth,
             trendLabel: 'so với tháng trước'
         },
         {
@@ -359,10 +434,10 @@ function AdminDashboard() {
             label: 'Doanh thu',
             value: formatCurrency(dashboardData.totalRevenue),
             icon: FaDollarSign,
-            meta: `${formatCurrency(dashboardData.todayRevenue)} hôm nay`,
+            meta: `${formatCurrency(dashboardData.revenueThisMonth || 0)} tháng này`,
             metaType: 'success',
             className: 'revenue',
-            trend: dashboardData.revenueGrowth, // ✅ Kiểm tra giá trị này
+            trend: dashboardData.revenueGrowth,
             trendLabel: 'so với tháng trước'
         }
     ];
@@ -573,57 +648,62 @@ function AdminDashboard() {
                     </h3>
                 </div>
                 <div className={styles.topProducts__list}>
-                    {topProducts.map((product, index) => (
-                        <div key={index} className={styles.topProducts__item}>
-                            <div className={styles.topProducts__itemLeft}>
-                                <div className={styles.topProducts__rank}>
-                                    {index + 1}
-                                </div>
-                                <img
-                                    src={getFullImageUrl(product.image_url) || getFullImageUrl(product.images?.[0]) || '/placeholder.jpg'}
-                                    alt={product.product_name || product.name}
-                                    className={styles.topProducts__image}
-                                    onError={(e) => {
-                                        e.target.src = '/placeholder.jpg';
-                                    }}
-                                />
-                                <div className={styles.topProducts__info}>
-                                    <p className={styles.topProducts__name}>
-                                        {product.product_name || product.name}
-                                    </p>
-                                    <p className={styles.topProducts__id}>
-                                        ID: {product.product_id || product.id}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className={styles.topProducts__stats}>
-                                <p className={styles.topProducts__price}>
-                                    {formatCurrency(product.final_price || product.price || product.variant_price || 0)}
-                                    {product.discount > 0 && (
-                                        <span className={styles.topProducts__oldPrice}>
-                                            {formatCurrency(product.price)}
-                                        </span>
-                                    )}
-                                </p>
-                                <p className={styles.topProducts__stock}>
-                                    Đã bán: {product.total_sold || 0}
-                                </p>
-                                <p className={styles.topProducts__stock}>
-                                    Tồn kho: {product.total_stock ?? 0}
-                                </p>
-                                <p className={styles.topProducts__rating}>
-                                    {Number(product.review_count || 0) === 0
-                                        ? 'Không có đánh giá'
-                                        : `Đánh giá: ${Number(product.average_rating || 0).toFixed(1)} / 5 ⭐`}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                    {topProducts.length === 0 && (
+                    {topProducts.length === 0 ? (
                         <div className={styles.topProducts__empty}>
                             <FaBox className={styles.topProducts__emptyIcon} />
                             <p>Không có sản phẩm nào</p>
                         </div>
+                    ) : (
+                        topProducts.map((product, index) => (
+                            <div key={product.product_id || product.id || index} className={styles.topProducts__item}>
+                                <div className={styles.topProducts__itemLeft}>
+                                    <div className={styles.topProducts__rank}>
+                                        {index + 1}
+                                    </div>
+                                    <img
+                                        src={
+                                            product.image_url
+                                                ? getFullImageUrl(product.image_url)
+                                                : product.images?.[0]
+                                                    ? getFullImageUrl(product.images[0])
+                                                    : '/placeholder.jpg'
+                                        }
+                                        alt={product.product_name || product.name || 'Sản phẩm'}
+                                        className={styles.topProducts__image}
+                                        onError={e => { e.target.src = '/placeholder.jpg'; }}
+                                    />
+                                    <div className={styles.topProducts__info}>
+                                        <p className={styles.topProducts__name}>
+                                            {product.product_name || product.name || 'Tên sản phẩm'}
+                                        </p>
+                                        <p className={styles.topProducts__id}>
+                                            ID: {product.product_id || product.id || 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className={styles.topProducts__stats}>
+                                    <p className={styles.topProducts__price}>
+                                        {formatCurrency(product.final_price ?? product.price ?? product.variant_price ?? 0)}
+                                        {product.discount > 0 && product.price && (
+                                            <span className={styles.topProducts__oldPrice}>
+                                                {formatCurrency(product.price)}
+                                            </span>
+                                        )}
+                                    </p>
+                                    <p className={styles.topProducts__stock}>
+                                        Đã bán: {product.total_sold ?? 0}
+                                    </p>
+                                    <p className={styles.topProducts__stock}>
+                                        Tồn kho: {product.total_stock ?? 0}
+                                    </p>
+                                    <p className={styles.topProducts__rating}>
+                                        {product.review_count === 0 || product.review_count === undefined
+                                            ? 'Không có đánh giá'
+                                            : `Đánh giá: ${(Number(product.average_rating) || 0).toFixed(1)} / 5 ⭐`}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
             </div>

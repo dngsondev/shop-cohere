@@ -75,8 +75,18 @@ import {
   deleteAdminModel,
   getAdminByIdModel,
 
+  getDashboardStatsAllTime,
   getDashboardStatsByMonth,
   getTopProductsByMonth,
+  getDailyStatsByMonth,
+
+  updateAdminStatusModel,
+
+  getAllVouchersModel,
+  getVoucherByIdModel,
+  createVoucherModel,
+  updateVoucherModel,
+  deleteVoucherModel,
 } from "../models/adminModels.js";
 import bcrypt from 'bcrypt';
 
@@ -1158,10 +1168,19 @@ export const deleteSize = async (req, res) => {
   }
 };
 
+export const getDashboardStatsAllTimeController = async (req, res) => {
+  try {
+    const stats = await getDashboardStatsAllTime();
+    res.json({ success: true, data: stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const getDashboardStatsByMonthController = async (req, res) => {
   try {
     const { month, year } = req.query;
-    const stats = await getDashboardStatsByMonth(month, year);
+    const stats = await getDashboardStatsByMonth(Number(month), Number(year));
     res.json({ success: true, data: stats });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1175,5 +1194,86 @@ export const getTopProductsByMonthController = async (req, res) => {
     res.json({ success: true, data: products });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getDailyStatsByMonthController = async (req, res) => {
+  try {
+    const { month, year } = req.query;
+    if (!month || !year) {
+      return res.status(400).json({ success: false, message: "Thiếu tháng hoặc năm" });
+    }
+    const stats = await getDailyStatsByMonth(Number(month), Number(year));
+    res.json({ success: true, data: stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateAdminStatus = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    const { status } = req.body;
+    if (status === undefined) {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin trạng thái' });
+    }
+    if (status !== 0 && status !== 1) {
+      return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ (0 hoặc 1)' });
+    }
+    const result = await updateAdminStatusModel(adminId, status);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy admin' });
+    }
+    res.json({ success: true, message: `${status === 1 ? 'Kích hoạt' : 'Vô hiệu hóa'} admin thành công` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật trạng thái admin' });
+  }
+};
+
+export const getAllVouchers = async (req, res) => {
+  try {
+    const vouchers = await getAllVouchersModel();
+    res.json({ success: true, vouchers });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi lấy danh sách voucher' });
+  }
+};
+
+export const getVoucherById = async (req, res) => {
+  try {
+    const voucher = await getVoucherByIdModel(req.params.voucherId);
+    if (!voucher) return res.status(404).json({ success: false, message: 'Không tìm thấy voucher' });
+    res.json({ success: true, voucher });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi lấy voucher' });
+  }
+};
+
+export const createVoucher = async (req, res) => {
+  try {
+    const id = await createVoucherModel(req.body);
+    res.json({ success: true, id, message: 'Tạo voucher thành công' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi tạo voucher' });
+  }
+};
+
+export const updateVoucher = async (req, res) => {
+  try {
+    const affected = await updateVoucherModel(req.params.voucherId, req.body);
+    if (!affected) return res.status(404).json({ success: false, message: 'Không tìm thấy voucher' });
+    res.json({ success: true, message: 'Cập nhật voucher thành công' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật voucher' });
+  }
+};
+
+export const deleteVoucher = async (req, res) => {
+  try {
+    const affected = await deleteVoucherModel(req.params.voucherId);
+    if (!affected) return res.status(404).json({ success: false, message: 'Không tìm thấy voucher' });
+    res.json({ success: true, message: 'Xóa voucher thành công' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi xóa voucher' });
   }
 };

@@ -249,6 +249,19 @@ function AdminUser() {
         }
     };
 
+    const handleToggleAdminStatus = async (adminId, currentStatus) => {
+        try {
+            const newStatus = currentStatus === 1 ? 0 : 1;
+            const res = await adminService.updateAdminStatus(adminId, newStatus);
+            if (res.data.success) {
+                alert(`${newStatus === 1 ? 'Kích hoạt' : 'Vô hiệu hóa'} admin thành công`);
+                fetchAdmins();
+            }
+        } catch (err) {
+            alert('Không thể cập nhật trạng thái admin');
+        }
+    };
+
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedUser(null);
@@ -339,6 +352,7 @@ function AdminUser() {
                 onView={handleViewAdmin}
                 onEdit={handleEditAdmin}
                 onDelete={handleDeleteAdmin}
+                onToggleStatus={handleToggleAdminStatus}
             />
 
             {/* Pagination */}

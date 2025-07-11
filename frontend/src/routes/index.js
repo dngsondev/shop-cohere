@@ -28,7 +28,9 @@ import {
     AdminOrder,
     AdminChat,
     AdminUser,
-    AdminDashboard
+    AdminDashboard,
+    VoucherManager,
+    CollectionManager
 } from '../features/Manage';
 
 // Đảm bảo import chính xác các layout
@@ -51,7 +53,10 @@ const privateRoutes = [
     { path: '/admin/orders', component: AdminOrder, layout: AdminLayout },
     { path: '/admin/chat', component: AdminChat, layout: AdminLayout },
     { path: '/admin/users', component: AdminUser, layout: AdminLayout },
+    { path: '/admin/voucher', component: VoucherManager, layout: AdminLayout },
+    { path: '/admin/collections', component: CollectionManager, layout: AdminLayout },
     { path: '/admin', component: AdminDashboard, layout: AdminLayout },
+
 
     { path: '/profile', component: Profile, layout: DefaultLayout },
     { path: '/profile/address', component: Profile, layout: DefaultLayout },

@@ -92,7 +92,10 @@ const productService = {
     },
 
     getAllBanners: () => axios.get(`${API_URL}/banner`),
-    getProductsByCollectionId: (collectionId) => axios.get(`${API_URL}/banner/${collectionId}`)
+    updateBanner: (id, data) => axios.put(`${API_URL}/banner/${id}`, data),
+    deleteBanner: (id) => axios.delete(`${API_URL}/banner/${id}`),
+    getProductsByCollectionId: (collectionId) => axios.get(`${API_URL}/banner/${collectionId}`),
+    createCollection: (data) => axios.post(`${API_URL}/collections`, data),
 };
 
 export default productService;

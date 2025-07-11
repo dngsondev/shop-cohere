@@ -22,6 +22,23 @@ adminAxios.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// Thêm interceptor cho response để tự động logout khi gặp lỗi 401
+adminAxios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 401) {
+            // Xóa token và user, chuyển hướng về trang đăng nhập
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('productId');
+            localStorage.removeItem('cartQuantity');
+            // localStorage.removeItem('admin_user');
+            window.location.href = '/';
+        }
+        return Promise.reject(error);
+    }
+);
+
 const adminService = {
     // Bot/Command APIs
     getCommands: () => {
@@ -88,8 +105,10 @@ const adminService = {
         return !!localStorage.getItem('token');
     },
 
+    getDashboardStatsAllTime: () => adminAxios.get('/dashboard/stats-all-time'),
     getDashboardStatsByMonth: (month, year) => adminAxios.get(`/dashboard/stats-by-month?month=${month}&year=${year}`),
     getTopProductsByMonth: (month, year, limit = 10) => adminAxios.get(`/dashboard/top-products-by-month?month=${month}&year=${year}&limit=${limit}`),
+    getDailyStatsByMonth: (month, year) => adminAxios.get(`/dashboard/daily-stats-by-month?month=${month}&year=${year}`),
 
     // User Management APIs
     getAllUsers: () => adminAxios.get('/users'),
@@ -176,7 +195,8 @@ const adminService = {
     // Dashboard & Analytics APIs
     getDashboardStats: () => adminAxios.get('/dashboard/stats'),
     getRevenueStats: (period) => adminAxios.get(`/dashboard/revenue?period=${period}`),
-    getTopProducts: (limit = 10) => adminAxios.get(`/dashboard/top-products?limit=${limit}`),
+    getTopProducts: (month, year, limit = 10) =>
+        adminAxios.get(`/dashboard/top-products-by-month?month=${month}&year=${year}&limit=${limit}`),
     getTopCustomers: (limit = 10) => adminAxios.get(`/dashboard/top-customers?limit=${limit}`),
 
     // THÊM METHOD MỚI
@@ -189,31 +209,15 @@ const adminService = {
         return adminAxios.get(`/dashboard/revenue-range?${params}`);
     },
 
-    // COMMENT OUT NHỮNG API CHƯA IMPLEMENT
-    // uploadImage: (formData) => adminAxios.post('/upload/image', formData, {
-    //     headers: {
-    //         'Content-Type': 'multipart/form-data'
-    //     }
-    // }),
-    // uploadMultipleImages: (formData) => adminAxios.post('/upload/images', formData, {
-    //     headers: {
-    //         'Content-Type': 'multipart/form-data'
-    //     }
-    // }),
+    updateAdminStatus: (adminId, status) =>
+        adminAxios.patch(`/admins/${adminId}/status`, { status }),
 
-    // getAllNotifications: () => adminAxios.get('/notifications'),
-    // markNotificationAsRead: (notificationId) => adminAxios.patch(`/notifications/${notificationId}/read`),
-    // deleteNotification: (notificationId) => adminAxios.delete(`/notifications/${notificationId}`),
-
-    // getSystemSettings: () => adminAxios.get('/settings'),
-    // updateSystemSettings: (settings) => adminAxios.put('/settings', settings),
-
-    // generateSalesReport: (startDate, endDate) => adminAxios.get(`/reports/sales?start=${startDate}&end=${endDate}`),
-    // generateInventoryReport: () => adminAxios.get('/reports/inventory'),
-    // generateCustomerReport: () => adminAxios.get('/reports/customers'),
-    // exportReport: (reportType, format = 'excel') => adminAxios.get(`/reports/export/${reportType}?format=${format}`, {
-    //     responseType: 'blob'
-    // })
+    // Voucher Management APIs
+    getAllVouchers: () => adminAxios.get('/vouchers'),
+    getVoucherById: (id) => adminAxios.get(`/vouchers/${id}`),
+    createVoucher: (data) => adminAxios.post('/vouchers', data),
+    updateVoucher: (id, data) => adminAxios.put(`/vouchers/${id}`, data),
+    deleteVoucher: (id) => adminAxios.delete(`/vouchers/${id}`),
 };
 
 export default adminService;

@@ -83,32 +83,51 @@ export const getAllProducts = () => {
 export const getAllInfoProducts = () => {
   return new Promise((resolve, reject) => {
     const query = `
-            SELECT 
-                p.product_id,
-                p.product_name,
-                p.description,
-                p.discount,
-                pv.variant_id,
-                pv.price,
-                pv.quantity,
-                pv.image_url AS variant_image_url, -- lấy ảnh từ biến thể
-                c.color_id,
-                c.color_code,
-                s.size_id,
-                m.material_id,
-                b.brand_id,
-                cat.category_id,
-                t.target_id
-            FROM 
-                products p
-            JOIN product_variants pv ON p.product_id = pv.product_id
-            JOIN colors c ON pv.color_id = c.color_id
-            JOIN sizes s ON pv.size_id = s.size_id
-            JOIN materials m ON pv.material_id = m.material_id
-            JOIN brands b ON pv.brand_id = b.brand_id
-            JOIN categories cat ON pv.category_id = cat.category_id
-            JOIN product_targets t ON pv.target_id = t.target_id
-            ORDER BY p.product_id DESC, pv.variant_id
+        SELECT 
+            p.product_id,
+            p.product_name,
+            p.description,
+            p.discount,
+            MIN(pi.product_image_url) AS product_image_url, -- lấy 1 ảnh duy nhất
+            pv.variant_id,
+            pv.price,
+            pv.quantity,
+            pv.image_url AS variant_image_url,
+            c.color_id,
+            c.color_code,
+            s.size_id,
+            m.material_id,
+            b.brand_id,
+            cat.category_id,
+            t.target_id
+        FROM 
+            products p
+        JOIN product_variants pv ON p.product_id = pv.product_id
+        JOIN colors c ON pv.color_id = c.color_id
+        JOIN sizes s ON pv.size_id = s.size_id
+        JOIN materials m ON pv.material_id = m.material_id
+        JOIN brands b ON pv.brand_id = b.brand_id
+        JOIN categories cat ON pv.category_id = cat.category_id
+        JOIN product_targets t ON pv.target_id = t.target_id
+        LEFT JOIN product_images pi ON p.product_id = pi.product_id
+        GROUP BY 
+            p.product_id,
+            pv.variant_id,
+            p.product_name,
+            p.description,
+            p.discount,
+            pv.price,
+            pv.quantity,
+            pv.image_url,
+            c.color_id,
+            c.color_code,
+            s.size_id,
+            m.material_id,
+            b.brand_id,
+            cat.category_id,
+            t.target_id
+        ORDER BY 
+            p.product_id DESC, pv.variant_id;
     `;
 
     connection.query(query, (err, results) => {

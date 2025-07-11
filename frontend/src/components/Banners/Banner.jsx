@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import productService from "../../services/productService"; // Sửa lại dòng này
-
+import productService from "../../services/productService";
+import { getFullImageUrl } from "../../utils/imageUtils";
 function Banner() {
     const [banners, setBanners] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const navigate = useNavigate();
+
+    // console.log("Banner component rendered: ", banners);
+
+    // console.log("Banner component rendered: ", getFullImageUrl(banners[0]?.banner_url));
+
 
     useEffect(() => {
         const fetchBanners = async () => {
@@ -60,7 +65,7 @@ function Banner() {
                                     transition: "filter 0.5s",
                                     filter: currentIndex === idx ? "brightness(1)" : "brightness(0.85)",
                                 }}
-                                src={banner.banner_url}
+                                src={getFullImageUrl(banner.banner_url)}
                                 alt={`Banner ${idx + 1}`}
                                 onClick={() => {
                                     if (banner.collection_id) {

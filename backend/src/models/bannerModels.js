@@ -1,7 +1,6 @@
 import connection from '../config/db.js';
 import { getProductById } from './productModel.js';
 
-// Lấy tất cả banner như cũ
 export const getAllBanners = () => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -12,7 +11,6 @@ export const getAllBanners = () => {
                 banner_url,
                 created_at
             FROM collections
-            WHERE banner_url IS NOT NULL
         `;
         connection.query(sql, (err, results) => {
             if (err) reject(err);
@@ -54,6 +52,63 @@ export const getProductsByCollectionId = (collectionId) => {
                     reject(error);
                 }
             });
+        });
+    });
+};
+
+export const createCollection = ({ collection_name, description, banner_url }) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            INSERT INTO collections (collection_name, description, banner_url, created_at)
+            VALUES (?, ?, ?, NOW())
+        `;
+        connection.query(sql, [collection_name, description, banner_url], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
+    });
+};
+
+export const addProductToCollection = (collection_id, product_id) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'INSERT INTO collection_products (collection_id, product_id) VALUES (?, ?)';
+        connection.query(sql, [collection_id, product_id], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
+    });
+};
+
+export const updateBanner = (id, { collection_name, description, banner_url }) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE collections
+            SET collection_name = ?, description = ?, banner_url = ?
+            WHERE collection_id = ?
+        `;
+        connection.query(sql, [collection_name, description, banner_url, id], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
+    });
+};
+
+export const deleteBanner = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM collections WHERE collection_id = ?';
+        connection.query(sql, [id], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
+    });
+};
+
+export const deleteAllProductsInCollection = (collection_id) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM collection_products WHERE collection_id = ?';
+        connection.query(sql, [collection_id], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
         });
     });
 };

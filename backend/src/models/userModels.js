@@ -2,6 +2,7 @@ import connection from '../config/db.js';
 import bcrypt from 'bcrypt';
 import axios from 'axios';
 import jwt from 'jsonwebtoken'; // Thêm import này ở đầu file
+import { downloadImageToAvatars } from '../utils/downloadImage.js';
 
 function checkPasswordWithDeliveryInfo(user, password, resolve, reject) {
   bcrypt.compare(password, user.password, (compareErr, isMatch) => {
@@ -109,6 +110,7 @@ export const login = (emailOrUsername, password) => {
         c.avatar, 
         c.gender, 
         'customer' as role,
+        c.status,
         GROUP_CONCAT(DISTINCT di.delivery_infor_id ORDER BY di.delivery_infor_id SEPARATOR ', ') AS delivery_infor_ids,
         GROUP_CONCAT(DISTINCT di.recipient_name ORDER BY di.delivery_infor_id SEPARATOR ', ') AS recipient_names,
         GROUP_CONCAT(DISTINCT di.address ORDER BY di.delivery_infor_id SEPARATOR ', ') AS addresses,
@@ -118,12 +120,12 @@ export const login = (emailOrUsername, password) => {
       LEFT JOIN delivery_infor di ON c.customer_id = di.customer_id
       WHERE c.email = ? OR c.customer_username = ?
       GROUP BY c.customer_id
-    `;
+`;
 
     // SỬA: Lấy role từ database thay vì hardcode 'admin'
     const adminQuery = `
       SELECT admin_id as id, admin_username as username, admin_name as fullname,
-             password, email, role
+             password, email, role, status
       FROM admins
       WHERE email = ? OR admin_username = ?
     `;
@@ -134,6 +136,9 @@ export const login = (emailOrUsername, password) => {
 
       if (customerResults.length > 0) {
         const user = customerResults[0];
+        if (user.status === 0) {
+          return resolve({ success: false, message: 'Tài khoản khách hàng đã bị vô hiệu hóa' });
+        }
         return checkPasswordWithDeliveryInfo(user, password, resolve, reject);
       }
 
@@ -143,6 +148,9 @@ export const login = (emailOrUsername, password) => {
 
         if (adminResults.length > 0) {
           const admin = adminResults[0];
+          if (admin.status === 0) {
+            return resolve({ success: false, message: 'Tài khoản admin đã bị vô hiệu hóa' });
+          }
           return checkPasswordAdmin(admin, password, resolve, reject);
         }
 
@@ -314,15 +322,21 @@ export const loginWithGoogle = async (tokenId) => {
           // User đã tồn tại
           const user = results[0];
 
-          // Cập nhật avatar nếu cần
-          if (!user.avatar && picture) {
-            connection.query(
-              'UPDATE customers SET avatar = ? WHERE customer_id = ?',
-              [picture, user.id],
-              (updateErr) => {
-                if (updateErr) console.error("Lỗi cập nhật avatar:", updateErr);
-              }
-            );
+          // Nếu avatar là link Google, tải về server và update DB
+          let avatarPath = user.avatar;
+          if (user.avatar && user.avatar.startsWith('http')) {
+            const localAvatar = await downloadImageToAvatars(user.avatar, user.id);
+            if (localAvatar) {
+              avatarPath = localAvatar;
+              // Update DB
+              await new Promise((res, rej) => {
+                connection.query(
+                  'UPDATE customers SET avatar = ? WHERE customer_id = ?',
+                  [localAvatar, user.id],
+                  (err) => err ? rej(err) : res()
+                );
+              });
+            }
           }
 
           // Xử lý để lấy thông tin địa chỉ đang được sử dụng
@@ -355,7 +369,7 @@ export const loginWithGoogle = async (tokenId) => {
               username: user.username,
               fullname: user.fullname,
               email: user.email,
-              avatar: picture || user.avatar || "images/otherImages/avt_defaut.png",
+              avatar: avatarPath || "images/otherImages/avt_defaut.png",
               role: user.role,
               gender: user.gender || null,
               // Thông tin địa chỉ hiện tại
@@ -377,6 +391,11 @@ export const loginWithGoogle = async (tokenId) => {
           const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
           const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+          let avatarPath = "images/otherImages/avt_defaut.png";
+          if (picture) {
+            const localAvatar = await downloadImageToAvatars(picture, googleId);
+            if (localAvatar) avatarPath = localAvatar;
+          }
           const newUser = {
             customer_username: username,
             customer_fullname: name,
@@ -384,7 +403,7 @@ export const loginWithGoogle = async (tokenId) => {
             password: hashedPassword,
             provider: 'google',
             provider_id: googleId,
-            avatar: picture || "images/otherImages/avt_defaut.png",
+            avatar: avatarPath,
             created_at: new Date()
           };
 

@@ -1,332 +1,3 @@
-// import connection from '../config/db.js';
-
-// export const getCommand = () => {
-//   return new Promise((resolve, reject) => {
-//     connection.query('SELECT * FROM command', (err, results) => {
-//       if (err) reject(err);
-//       else resolve(results);
-//     });
-//   });
-// };
-
-// export const updateCommand = (command) => {
-//   return new Promise((resolve, reject) => {
-//     connection.query('UPDATE command SET contents = ?', command, (err, results) => {
-//       if (err) reject(err);
-//       else resolve(results);
-//     });
-//   });
-// };
-
-// // USER MANAGEMENT MODELS
-
-// // Lấy tất cả người dùng với số điện thoại
-// export const getAllUsersModel = () => {
-//   return new Promise((resolve, reject) => {
-//     const query = `
-//             SELECT 
-//                 c.customer_id as id,
-//                 c.customer_username as username,
-//                 c.customer_fullname as fullname,
-//                 c.email,
-//                 c.avatar,
-//                 c.gender,
-//                 c.birth_day as birthDay,
-//                 c.birth_month as birthMonth,
-//                 c.birth_year as birthYear,
-//                 c.provider,
-//                 c.provider_id,
-//                 c.token,
-//                 c.created_at,
-//                 COALESCE(c.status, 1) as status,
-//                 GROUP_CONCAT(DISTINCT di.phone ORDER BY di.delivery_infor_id SEPARATOR ', ') as phones
-//             FROM customers c
-//             LEFT JOIN delivery_infor di ON c.customer_id = di.customer_id AND di.is_being_used = 1
-//             GROUP BY c.customer_id
-//             ORDER BY c.created_at DESC
-//         `;
-
-//     connection.query(query, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results);
-//       }
-//     });
-//   });
-// };
-
-// // Lấy người dùng theo ID với thông tin đầy đủ
-// export const getUserByIdModel = (userId) => {
-//   return new Promise((resolve, reject) => {
-//     const query = `
-//             SELECT 
-//                 c.customer_id as id,
-//                 c.customer_username as username,
-//                 c.customer_fullname as fullname,
-//                 c.password,
-//                 c.email,
-//                 c.avatar,
-//                 c.gender,
-//                 c.birth_day as birthDay,
-//                 c.birth_month as birthMonth,
-//                 c.birth_year as birthYear,
-//                 c.provider,
-//                 c.provider_id,
-//                 c.token,
-//                 c.created_at,
-//                 COALESCE(c.status, 1) as status,
-//                 GROUP_CONCAT(DISTINCT di.phone ORDER BY di.delivery_infor_id SEPARATOR ', ') as phones,
-//                 GROUP_CONCAT(DISTINCT di.address ORDER BY di.delivery_infor_id SEPARATOR ' | ') as addresses
-//             FROM customers c
-//             LEFT JOIN delivery_infor di ON c.customer_id = di.customer_id AND di.is_being_used = 1
-//             WHERE c.customer_id = ?
-//             GROUP BY c.customer_id
-//         `;
-
-//     connection.query(query, [userId], (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results[0]);
-//       }
-//     });
-//   });
-// };
-
-// // Tạo người dùng mới
-// export const createUserModel = (userData) => {
-//   return new Promise((resolve, reject) => {
-//     const query = `
-//             INSERT INTO customers (
-//                 customer_username,
-//                 customer_fullname,
-//                 password,
-//                 email,
-//                 gender,
-//                 birth_day,
-//                 birth_month,
-//                 birth_year,
-//                 provider,
-//                 status,
-//                 created_at
-//             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-//         `;
-
-//     const values = [
-//       userData.username,
-//       userData.fullname,
-//       userData.password,
-//       userData.email,
-//       userData.gender,
-//       userData.birthDay,
-//       userData.birthMonth,
-//       userData.birthYear,
-//       userData.provider || 'local',
-//       userData.status || 1
-//     ];
-
-//     connection.query(query, values, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results.insertId);
-//       }
-//     });
-//   });
-// };
-
-// // Cập nhật thông tin người dùng
-// export const updateUserModel = (userId, userData) => {
-//   return new Promise((resolve, reject) => {
-//     const fields = [];
-//     const values = [];
-
-//     if (userData.username) {
-//       fields.push('customer_username = ?');
-//       values.push(userData.username);
-//     }
-//     if (userData.fullname) {
-//       fields.push('customer_fullname = ?');
-//       values.push(userData.fullname);
-//     }
-//     if (userData.password) {
-//       fields.push('password = ?');
-//       values.push(userData.password);
-//     }
-//     if (userData.email) {
-//       fields.push('email = ?');
-//       values.push(userData.email);
-//     }
-//     if (userData.avatar) {
-//       fields.push('avatar = ?');
-//       values.push(userData.avatar);
-//     }
-//     if (userData.gender !== undefined) {
-//       fields.push('gender = ?');
-//       values.push(userData.gender);
-//     }
-//     if (userData.birthDay !== undefined) {
-//       fields.push('birth_day = ?');
-//       values.push(userData.birthDay);
-//     }
-//     if (userData.birthMonth !== undefined) {
-//       fields.push('birth_month = ?');
-//       values.push(userData.birthMonth);
-//     }
-//     if (userData.birthYear !== undefined) {
-//       fields.push('birth_year = ?');
-//       values.push(userData.birthYear);
-//     }
-//     if (userData.status !== undefined) {
-//       fields.push('status = ?');
-//       values.push(userData.status);
-//     }
-
-//     if (fields.length === 0) {
-//       resolve(true);
-//       return;
-//     }
-
-//     values.push(userId);
-//     const query = `UPDATE customers SET ${fields.join(', ')} WHERE customer_id = ?`;
-
-//     connection.query(query, values, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results);
-//       }
-//     });
-//   });
-// };
-
-// // Xóa người dùng
-// export const deleteUserModel = (userId) => {
-//   return new Promise((resolve, reject) => {
-//     connection.beginTransaction((err) => {
-//       if (err) {
-//         reject(err);
-//         return;
-//       }
-
-//       // Xóa delivery info trước
-//       connection.query('DELETE FROM delivery_infor WHERE customer_id = ?', [userId], (err) => {
-//         if (err) {
-//           return connection.rollback(() => {
-//             reject(err);
-//           });
-//         }
-
-//         // Sau đó xóa customer
-//         connection.query('DELETE FROM customers WHERE customer_id = ?', [userId], (err, results) => {
-//           if (err) {
-//             return connection.rollback(() => {
-//               reject(err);
-//             });
-//           }
-
-//           connection.commit((err) => {
-//             if (err) {
-//               return connection.rollback(() => {
-//                 reject(err);
-//               });
-//             }
-//             resolve(results);
-//           });
-//         });
-//       });
-//     });
-//   });
-// };
-
-// // Cập nhật trạng thái người dùng
-// export const updateUserStatusModel = (userId, status) => {
-//   return new Promise((resolve, reject) => {
-//     const query = 'UPDATE customers SET status = ? WHERE customer_id = ?';
-
-//     connection.query(query, [status, userId], (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results);
-//       }
-//     });
-//   });
-// };
-
-// // Lấy đơn hàng của người dùng
-// export const getUserOrdersModel = (userId) => {
-//   return new Promise((resolve, reject) => {
-//     const query = `
-//             SELECT 
-//                 o.*,
-//                 COUNT(od.order_detail_id) as total_items,
-//                 SUM(od.quantity * od.price) as total_amount
-//             FROM orders o
-//             LEFT JOIN order_details od ON o.order_id = od.order_id
-//             WHERE o.customer_id = ?
-//             GROUP BY o.order_id
-//             ORDER BY o.created_at DESC
-//         `;
-
-//     connection.query(query, [userId], (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results);
-//       }
-//     });
-//   });
-// };
-
-// // Lấy thống kê người dùng
-// export const getUserStatsModel = () => {
-//   return new Promise((resolve, reject) => {
-//     const query = `
-//             SELECT 
-//                 COUNT(*) as total_users,
-//                 COUNT(CASE WHEN provider = 'local' THEN 1 END) as local_users,
-//                 COUNT(CASE WHEN provider != 'local' THEN 1 END) as social_users,
-//                 COUNT(CASE WHEN COALESCE(status, 1) = 1 THEN 1 END) as active_users,
-//                 COUNT(CASE WHEN COALESCE(status, 1) = 0 THEN 1 END) as inactive_users,
-//                 COUNT(CASE WHEN YEAR(created_at) = YEAR(NOW()) THEN 1 END) as users_this_year,
-//                 COUNT(CASE WHEN MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) THEN 1 END) as users_this_month,
-//                 COUNT(CASE WHEN DATE(created_at) = CURDATE() THEN 1 END) as users_today
-//             FROM customers
-//         `;
-
-//     connection.query(query, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results[0]);
-//       }
-//     });
-//   });
-// };
-
-// // Kiểm tra user đã tồn tại
-// export const checkUserExistsModel = (username, email, excludeUserId = null) => {
-//   return new Promise((resolve, reject) => {
-//     let query = 'SELECT customer_id FROM customers WHERE customer_username = ? OR email = ?';
-//     let values = [username, email];
-
-//     if (excludeUserId) {
-//       query += ' AND customer_id != ?';
-//       values.push(excludeUserId);
-//     }
-
-//     connection.query(query, values, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results.length > 0 ? results[0] : null);
-//       }
-//     });
-//   });
-// };
-
 import connection from '../config/db.js';
 
 // COMMAND MANAGEMENT (giữ nguyên)
@@ -1535,7 +1206,7 @@ export const createAdminModel = (adminData) => {
 
 export const getAllAdminsModel = () => {
   return new Promise((resolve, reject) => {
-    const query = `SELECT admin_id, admin_username, admin_name, email, role, created_at FROM admins ORDER BY created_at DESC`;
+    const query = `SELECT admin_id, admin_username, admin_name, email, role, created_at, status FROM admins ORDER BY created_at DESC`;
     connection.query(query, (err, results) => {
       if (err) reject(err);
       else resolve(results);
@@ -1845,18 +1516,94 @@ export const deleteSizeModel = (id) => {
   });
 };
 
-export const getDashboardStatsByMonth = (month, year) => {
+// export const getDashboardStatsByMonth = (month, year) => {
+//   return new Promise((resolve, reject) => {
+//     const query = `
+//             SELECT
+//                 (SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS total_orders,
+//                 (SELECT IFNULL(SUM(total_price),0) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS total_revenue,
+//                 (SELECT COUNT(*) FROM customers WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS new_customers,
+//                 (SELECT COUNT(*) FROM products WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS new_products
+//         `;
+//     connection.query(query, [month, year, month, year, month, year, month, year], (err, results) => {
+//       if (err) reject(err);
+//       else resolve(results[0]);
+//     });
+//   });
+// };
+
+export const getDashboardStatsAllTime = () => {
   return new Promise((resolve, reject) => {
     const query = `
-            SELECT
-                (SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS total_orders,
-                (SELECT IFNULL(SUM(total_price),0) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS total_revenue,
-                (SELECT COUNT(*) FROM customers WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS new_customers,
-                (SELECT COUNT(*) FROM products WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS new_products
-        `;
-    connection.query(query, [month, year, month, year, month, year, month, year], (err, results) => {
+      SELECT
+        (SELECT COUNT(*) FROM orders) AS total_orders,
+        (SELECT COUNT(*) FROM customers) AS total_users,
+        (SELECT COUNT(*) FROM products) AS total_products,
+        (SELECT IFNULL(SUM(total_price),0) FROM orders WHERE order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS total_revenue,
+        (SELECT COUNT(*) FROM reviews) AS total_reviews,
+        (SELECT ROUND(AVG(rating),1) FROM reviews) AS average_rating
+    `;
+    connection.query(query, (err, results) => {
       if (err) reject(err);
       else resolve(results[0]);
+    });
+  });
+};
+
+export const getDashboardStatsByMonth = (month, year) => {
+  return new Promise((resolve, reject) => {
+    let prevMonth = month - 1;
+    let prevYear = year;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear = year - 1;
+    }
+    const query = `
+      SELECT
+        -- Tháng hiện tại
+        (SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS orders_this_month,
+        (SELECT IFNULL(SUM(total_price),0) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS revenue_this_month,
+        (SELECT COUNT(*) FROM orders WHERE order_status = 'Chờ xác nhận') AS pending_orders, -- Sửa: bỏ lọc tháng
+        (SELECT COUNT(*) FROM customers WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS users_this_month,
+        (SELECT COUNT(*) FROM products WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS products_this_month,
+        (SELECT COUNT(*) FROM reviews WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS reviews_this_month,
+        -- Tháng trước
+        (SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS orders_last_month,
+        (SELECT IFNULL(SUM(total_price),0) FROM orders WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND order_status IN ('Đã xác nhận', 'Đang giao', 'Hoàn thành')) AS revenue_last_month,
+        (SELECT COUNT(*) FROM customers WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS users_last_month,
+        (SELECT COUNT(*) FROM products WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS products_last_month,
+        (SELECT COUNT(*) FROM reviews WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?) AS reviews_last_month
+    `;
+    const params = [
+      month, year, // orders_this_month
+      month, year, // revenue_this_month
+      // pending_orders không cần params
+      month, year, // users_this_month
+      month, year, // products_this_month
+      month, year, // reviews_this_month
+      prevMonth, prevYear, // orders_last_month
+      prevMonth, prevYear, // revenue_last_month
+      prevMonth, prevYear, // users_last_month
+      prevMonth, prevYear, // products_last_month
+      prevMonth, prevYear  // reviews_last_month
+    ];
+    connection.query(query, params, (err, results) => {
+      if (err) reject(err);
+      else {
+        const r = results[0];
+        const calcGrowth = (now, prev) => {
+          if (!prev || prev === 0) return now > 0 ? 100 : 0;
+          return Math.round(((now - prev) / prev) * 100);
+        };
+        resolve({
+          ...r,
+          orders_growth: calcGrowth(r.orders_this_month, r.orders_last_month),
+          revenue_growth: calcGrowth(r.revenue_this_month, r.revenue_last_month),
+          users_growth: calcGrowth(r.users_this_month, r.users_last_month),
+          products_growth: calcGrowth(r.products_this_month, r.products_last_month),
+          reviews_growth: calcGrowth(r.reviews_this_month, r.reviews_last_month)
+        });
+      }
     });
   });
 };
@@ -1913,6 +1660,171 @@ export const getTopProductsByMonth = (month, year, limit = 10) => {
     connection.query(query, [month, year, parseInt(limit)], (err, results) => {
       if (err) reject(err);
       else resolve(results);
+    });
+  });
+};
+
+export const getDailyStatsByMonth = (month, year) => {
+  return new Promise((resolve, reject) => {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    // Query lấy số đơn, doanh thu, đơn chờ xử lý từng ngày
+    const query = `
+      SELECT
+        DAY(created_at) as day,
+        COUNT(*) as orders,
+        IFNULL(SUM(total_price), 0) as revenue,
+        SUM(order_status = 'Chờ xác nhận') as pending_orders
+      FROM orders
+      WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?
+      GROUP BY DAY(created_at)
+    `;
+
+    // Query lấy khách mới từng ngày
+    const usersQuery = `
+      SELECT
+        DAY(created_at) as day,
+        COUNT(*) as new_users
+      FROM customers
+      WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?
+      GROUP BY DAY(created_at)
+    `;
+
+    // Query lấy mã sản phẩm đã bán từng ngày
+    const productsQuery = `
+      SELECT
+        DAY(o.created_at) as day,
+        GROUP_CONCAT(DISTINCT od.product_id) as product_ids
+      FROM orders o
+      JOIN order_details od ON o.order_id = od.order_id
+      WHERE MONTH(o.created_at) = ? AND YEAR(o.created_at) = ?
+      GROUP BY DAY(o.created_at)
+    `;
+
+    // Query lấy mã sản phẩm đang chờ xử lý từng ngày
+    const pendingProductsQuery = `
+      SELECT
+        DAY(o.created_at) as day,
+        GROUP_CONCAT(DISTINCT od.product_id) as pending_product_ids
+      FROM orders o
+      JOIN order_details od ON o.order_id = od.order_id
+      WHERE MONTH(o.created_at) = ? AND YEAR(o.created_at) = ? AND o.order_status = 'Chờ xác nhận'
+      GROUP BY DAY(o.created_at)
+    `;
+
+    connection.query(query, [month, year], (err, orderResults) => {
+      if (err) return reject(err);
+
+      connection.query(usersQuery, [month, year], (err, userResults) => {
+        if (err) return reject(err);
+
+        connection.query(productsQuery, [month, year], (err, productResults) => {
+          if (err) return reject(err);
+
+          connection.query(pendingProductsQuery, [month, year], (err, pendingProductResults) => {
+            if (err) return reject(err);
+
+            // Map dữ liệu từng ngày
+            const orderMap = {};
+            orderResults.forEach(r => {
+              orderMap[r.day] = {
+                orders: r.orders,
+                revenue: r.revenue,
+                pending_orders: r.pending_orders
+              };
+            });
+
+            const userMap = {};
+            userResults.forEach(r => {
+              userMap[r.day] = r.new_users;
+            });
+
+            const productMap = {};
+            productResults.forEach(r => {
+              productMap[r.day] = r.product_ids ? r.product_ids.split(',') : [];
+            });
+
+            const pendingProductMap = {};
+            pendingProductResults.forEach(r => {
+              pendingProductMap[r.day] = r.pending_product_ids ? r.pending_product_ids.split(',') : [];
+            });
+
+            // Tạo mảng kết quả đủ ngày trong tháng
+            const dailyStats = days.map(day => ({
+              date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+              orders: orderMap[day]?.orders || 0,
+              revenue: orderMap[day]?.revenue || 0,
+              new_users: userMap[day] || 0,
+              pending_orders: orderMap[day]?.pending_orders || 0,
+              product_ids: productMap[day] || [],
+              pending_product_ids: pendingProductMap[day] || []
+            }));
+
+            resolve(dailyStats);
+          });
+        });
+      });
+    });
+  });
+};
+
+export const updateAdminStatusModel = (adminId, status) => {
+  return new Promise((resolve, reject) => {
+    const query = 'UPDATE admins SET status = ? WHERE admin_id = ?';
+    connection.query(query, [status, adminId], (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
+
+// Lấy tất cả voucher
+export const getAllVouchersModel = () => {
+  return new Promise((resolve, reject) => {
+    connection.query('SELECT * FROM vouchers ORDER BY valid_from DESC', (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
+
+// Lấy voucher theo ID
+export const getVoucherByIdModel = (voucherId) => {
+  return new Promise((resolve, reject) => {
+    connection.query('SELECT * FROM vouchers WHERE voucher_id = ?', [voucherId], (err, results) => {
+      if (err) reject(err);
+      else resolve(results[0]);
+    });
+  });
+};
+
+// Thêm voucher mới
+export const createVoucherModel = (voucherData) => {
+  return new Promise((resolve, reject) => {
+    connection.query('INSERT INTO vouchers SET ?', voucherData, (err, result) => {
+      if (err) reject(err);
+      else resolve(result.insertId);
+    });
+  });
+};
+
+// Cập nhật voucher
+export const updateVoucherModel = (voucherId, voucherData) => {
+  return new Promise((resolve, reject) => {
+    connection.query('UPDATE vouchers SET ? WHERE voucher_id = ?', [voucherData, voucherId], (err, result) => {
+      if (err) reject(err);
+      else resolve(result.affectedRows);
+    });
+  });
+};
+
+// Xóa voucher
+export const deleteVoucherModel = (voucherId) => {
+  return new Promise((resolve, reject) => {
+    connection.query('DELETE FROM vouchers WHERE voucher_id = ?', [voucherId], (err, result) => {
+      if (err) reject(err);
+      else resolve(result.affectedRows);
     });
   });
 };

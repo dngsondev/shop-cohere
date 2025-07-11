@@ -11,6 +11,18 @@ import BotSuggestQuestions from './BotSuggestQuestions';
 import Messages from './Messages';
 import styles from './ChatBot.module.scss';
 
+// Lấy userId, nếu chưa có thì tạo userId tạm cho khách
+const getUserId = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.id) return user.id;
+    let guestId = localStorage.getItem('guest_id');
+    if (!guestId) {
+        guestId = 'guest_' + Date.now();
+        localStorage.setItem('guest_id', guestId);
+    }
+    return guestId;
+};
+
 // Thêm props globalRoomId và onRoomCreated
 function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoomCreated }) {
     const [messages, setMessages] = useState([]);
@@ -19,12 +31,13 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
     const [suggestions, setSuggestions] = useState([]);
     const [suggestionsLoading, setSuggestionsLoading] = useState(false); // Thêm state này
     const [isOnline, setIsOnline] = useState(true); // Trạng thái online của bot
+    const [lastMentionedProductIds, setLastMentionedProductIds] = useState([]);
 
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
 
     // Get userId và productId từ props user hoặc storage
-    const userId = user?.id || JSON.parse(localStorage.getItem('user'))?.id || null;
+    const userId = user?.id || getUserId();
     const productId = JSON.parse(sessionStorage.getItem('productId')) || null;
 
     // Tạo unique key cho session này
@@ -98,23 +111,28 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
 
     // Load initial suggestions
     useEffect(() => {
-        const loadInitialSuggestions = async () => {
+        // Lấy message mới nhất của user
+        const lastUserMsg = [...messages].reverse().find(msg => msg.sender === 'user');
+        const lastMsgContent = lastUserMsg ? lastUserMsg.content : '';
+
+        const loadSuggestionsByMessage = async () => {
             setSuggestionsLoading(true);
             try {
-                const initialSuggestions = await QuestionSuggestions({
-                    props: { userId, productId }
+                const newSuggestions = await QuestionSuggestions({
+                    message: lastMsgContent
                 });
-                setSuggestions(initialSuggestions || []);
+                setSuggestions(newSuggestions || []);
             } catch (error) {
-                console.error('Error loading initial suggestions:', error);
                 setSuggestions([]);
             } finally {
                 setSuggestionsLoading(false);
             }
         };
 
-        loadInitialSuggestions();
-    }, [userId, productId]);
+        if (lastMsgContent) {
+            loadSuggestionsByMessage();
+        }
+    }, [messages]);
 
     // Kiểm tra trạng thái online (có thể dựa vào WebSocket, API, etc.)
     useEffect(() => {
@@ -129,6 +147,31 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
 
         // return () => clearInterval(checkBotStatus);
     }, []);
+
+    useEffect(() => {
+        // Tìm productIds mới nhất từ tin nhắn bot cuối cùng
+        const lastBotMsg = messages.slice().reverse().find(msg => msg.sender === 'bot' && msg.products && Object.keys(msg.products).length > 0);
+        if (lastBotMsg) {
+            const newProductIds = Object.values(lastBotMsg.products).map(p => p.product_id);
+            // So sánh với state cũ, nếu khác thì làm mới gợi ý
+            if (JSON.stringify(newProductIds) !== JSON.stringify(lastMentionedProductIds)) {
+                setLastMentionedProductIds(newProductIds);
+                // Gọi lại API lấy gợi ý dựa trên sản phẩm mới
+                (async () => {
+                    setSuggestionsLoading(true);
+                    try {
+                        const props = { userId, productId: newProductIds[0] }; // lấy productId đầu tiên hoặc logic phù hợp
+                        const newSuggestions = await QuestionSuggestions({ props });
+                        setSuggestions(newSuggestions);
+                    } catch (error) {
+                        setSuggestions([]);
+                    } finally {
+                        setSuggestionsLoading(false);
+                    }
+                })();
+            }
+        }
+    }, [messages]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -158,8 +201,15 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
         setIsLoading(true);
 
         try {
+            // Lấy 4 tin nhắn gần nhất (bao gồm cả user và bot)
+            const last4Messages = updatedMessages.slice(-4).map(msg => ({
+                content: msg.content,
+                sender: msg.sender,
+                // timestamp: msg.timestamp
+            }));
+
             const response = await botService.sendMessage({
-                message: userMessage,
+                messages: last4Messages,
                 userId: userId,
                 productId: productId
             });
@@ -178,14 +228,22 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
                 const finalMessages = [...messagesWithoutThinking, botResponse];
                 setMessages(finalMessages);
 
-                // Load suggestions mới dựa trên phản hồi
+                // Lấy productId mới nhất nếu có sản phẩm mới được nhắc đến
+                let newProductId = productId;
+                if (response.data.products && Object.keys(response.data.products).length > 0) {
+                    // Lấy productId đầu tiên trong danh sách sản phẩm trả về
+                    const firstProduct = Object.values(response.data.products)[0];
+                    newProductId = firstProduct?.product_id || productId;
+                }
+
+                // Luôn truyền message vừa gửi vào QuestionSuggestions
                 try {
                     setSuggestionsLoading(true);
-                    const props = { userId, productId };
-                    const newSuggestions = await QuestionSuggestions({ props, message: userMessage });
+                    // const props = { userId, productId: newProductId };
+                    const newSuggestions = await QuestionSuggestions({ message: userMessage });
                     setSuggestions(newSuggestions);
                 } catch (suggestionError) {
-                    console.error("Error loading new suggestions:", suggestionError);
+                    setSuggestions([]);
                 } finally {
                     setSuggestionsLoading(false);
                 }
@@ -213,11 +271,20 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
 
     const handleSuggestedQuestionClick = async (question) => {
         if (isLoading) return;
-
-        console.log("Question clicked:", question);
         setInput(question);
 
-        // Tự động gửi tin nhắn
+        setSuggestionsLoading(true);
+        try {
+            // const props = { userId, productId };
+            // Luôn truyền câu hỏi vừa chọn
+            const newSuggestions = await QuestionSuggestions({ message: question });
+            setSuggestions(newSuggestions);
+        } catch (error) {
+            setSuggestions([]);
+        } finally {
+            setSuggestionsLoading(false);
+        }
+
         setTimeout(() => {
             handleSend();
         }, 100);
@@ -230,66 +297,66 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
         }
     };
 
-    const handleCloseChat = () => {
-        setShowChat(false);
-    };
+    // const handleCloseChat = () => {
+    //     setShowChat(false);
+    // };
 
-    const handleSwitchToStaff = () => {
-        // Nếu có globalRoomId, thông báo cho parent trước khi chuyển
-        if (!globalRoomId && userId) {
-            // Tạo room trước khi chuyển sang staff chat
-            chatService.createOrGetRoom(userId)
-                .then(response => {
-                    if (response.data?.success && response.data?.room) {
-                        onRoomCreated?.(response.data.room.room_id);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error creating room before switch:', error);
-                })
-                .finally(() => {
-                    setChatType('staff');
-                });
-        } else {
-            setChatType('staff');
-        }
-    };
+    // const handleSwitchToStaff = () => {
+    //     // Nếu có globalRoomId, thông báo cho parent trước khi chuyển
+    //     if (!globalRoomId && userId) {
+    //         // Tạo room trước khi chuyển sang staff chat
+    //         chatService.createOrGetRoom(userId)
+    //             .then(response => {
+    //                 if (response.data?.success && response.data?.room) {
+    //                     onRoomCreated?.(response.data.room.room_id);
+    //                 }
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error creating room before switch:', error);
+    //             })
+    //             .finally(() => {
+    //                 setChatType('staff');
+    //             });
+    //     } else {
+    //         setChatType('staff');
+    //     }
+    // };
 
-    // Hàm xóa lịch sử chat
-    const handleClearHistory = () => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa lịch sử chat không?')) {
-            sessionStorage.removeItem(sessionKey);
-            initializeWelcomeMessage();
-        }
-    };
+    // // Hàm xóa lịch sử chat
+    // const handleClearHistory = () => {
+    //     if (window.confirm('Bạn có chắc chắn muốn xóa lịch sử chat không?')) {
+    //         sessionStorage.removeItem(sessionKey);
+    //         initializeWelcomeMessage();
+    //     }
+    // };
 
-    // Hàm export lịch sử chat
-    const handleExportHistory = () => {
-        try {
-            const chatHistory = {
-                userId: userId,
-                productId: productId,
-                messages: messages,
-                exportTime: new Date().toISOString(),
-                sessionKey: sessionKey
-            };
+    // // Hàm export lịch sử chat
+    // const handleExportHistory = () => {
+    //     try {
+    //         const chatHistory = {
+    //             userId: userId,
+    //             productId: productId,
+    //             messages: messages,
+    //             exportTime: new Date().toISOString(),
+    //             sessionKey: sessionKey
+    //         };
 
-            const dataStr = JSON.stringify(chatHistory, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    //         const dataStr = JSON.stringify(chatHistory, null, 2);
+    //         const dataBlob = new Blob([dataStr], { type: 'application/json' });
 
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `chat_history_${new Date().getTime()}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error exporting chat history:', error);
-            alert('Có lỗi xảy ra khi xuất lịch sử chat');
-        }
-    };
+    //         const url = URL.createObjectURL(dataBlob);
+    //         const link = document.createElement('a');
+    //         link.href = url;
+    //         link.download = `chat_history_${new Date().getTime()}.json`;
+    //         document.body.appendChild(link);
+    //         link.click();
+    //         document.body.removeChild(link);
+    //         URL.revokeObjectURL(url);
+    //     } catch (error) {
+    //         console.error('Error exporting chat history:', error);
+    //         alert('Có lỗi xảy ra khi xuất lịch sử chat');
+    //     }
+    // };
 
     return (
         <div className={styles.chatContainer}>

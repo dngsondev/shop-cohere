@@ -82,8 +82,18 @@ import {
     updateSize,
     deleteSize,
 
+    getDashboardStatsAllTimeController,
     getDashboardStatsByMonthController,
     getTopProductsByMonthController,
+    getDailyStatsByMonthController,
+
+    updateAdminStatus,
+
+    getAllVouchers,
+    getVoucherById,
+    createVoucher,
+    updateVoucher,
+    deleteVoucher,
 } from '../controllers/adminController.js';
 
 // Import order controllers
@@ -95,8 +105,16 @@ import {
 
 const router = express.Router();
 
+router.get('/vouchers', getAllVouchers);
+router.get('/vouchers/:voucherId', getVoucherById);
+router.post('/vouchers', createVoucher);
+router.put('/vouchers/:voucherId', updateVoucher);
+router.delete('/vouchers/:voucherId', deleteVoucher);
+
+router.get('/dashboard/stats-all-time', getDashboardStatsAllTimeController);
 router.get('/dashboard/stats-by-month', getDashboardStatsByMonthController);
 router.get('/dashboard/top-products-by-month', getTopProductsByMonthController);
+router.get('/dashboard/daily-stats-by-month', getDailyStatsByMonthController);
 
 //BRAND
 router.get('/brands', getAllBrands);
@@ -160,6 +178,8 @@ router.put('/users/:userId', updateUser);
 router.delete('/users/:userId', deleteUser);
 router.patch('/users/:userId/status', updateUserStatus);
 router.get('/users/:userId/orders', getUserOrders);
+
+router.patch('/admins/:adminId/status', updateAdminStatus);
 
 // Order management routes
 router.get('/orders/stats', getOrderStats);

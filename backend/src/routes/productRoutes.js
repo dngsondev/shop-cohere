@@ -27,13 +27,22 @@ import {
   suggestProductController,
   getProductsForYouController
 } from '../controllers/productController.js';
-import { getBanners, getProductsByCollection } from '../controllers/bannerController.js';
+import {
+  getBanners,
+  getProductsByCollection,
+  createCollectionController,
+  updateBannerController,
+  deleteBannerController
+} from '../controllers/bannerController.js';
 import { memoryMonitor } from '../middleware/memoryMonitor.js';
 
 const router = express.Router();
 
 router.get('/banner', getBanners);
+router.put('/banner/:id', updateBannerController);
+router.delete('/banner/:id', deleteBannerController);
 router.get('/banner/:collectionId', getProductsByCollection);
+router.post('/collections', createCollectionController);
 
 // Route tạo sản phẩm mới với memory monitoring
 router.post('/create',

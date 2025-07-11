@@ -5,7 +5,7 @@ import { FaStar, FaRegStar } from "react-icons/fa";
 import styles from './DisplayProducts.module.scss';
 
 function DisplayProducts({ products }) {
-    console.log("Display Products: ", products);
+    // console.log("Display Products: ", products);
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', {

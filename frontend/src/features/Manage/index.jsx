@@ -5,3 +5,5 @@ export { default as AdminOrder } from './AdminOrder/AdminOrder';
 export { default as AdminChat } from './AdminChat/AdminChat';
 export { default as AdminUser } from './AdminUser/AdminUser';
 export { default as AdminDashboard } from './AdminDashboard/AdminDashboard';
+export { default as VoucherManager } from './Vouchers/VoucherManager';
+export { default as CollectionManager } from './Collections/CollectionManager';
