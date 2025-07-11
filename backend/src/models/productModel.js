@@ -258,7 +258,8 @@ export const getProductById = (id) => {
                           'material', IFNULL(m.material_name, ''),
                           'image_url', IFNULL(pv.image_url, ''),
                           'quantity', IFNULL(pv.quantity, 0)
-                        ) ORDER BY pv.variant_id SEPARATOR ','
+                        ) 
+                        ORDER BY pv.variant_id SEPARATOR ','
                       ),
                       ']'
                     ) AS variants,
