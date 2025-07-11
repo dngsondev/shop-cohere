@@ -39,38 +39,37 @@ function categorizeImages(uploadedImageUrls) {
 // Lấy tất cả sản phẩm
 export const getAllProducts = () => {
   return new Promise((resolve, reject) => {
-    const query = `
-                  SELECT 
-                      p.product_id, 
-                      p.product_name, 
-                      p.description, 
-                      p.discount,
-                      p.created_at,
-                      ROUND(AVG(r.rating), 1) AS rating,
-                      MIN(pv.price) AS price,
-                      GROUP_CONCAT(DISTINCT c.color_name ORDER BY c.color_name SEPARATOR ', ') AS colors,
-                      GROUP_CONCAT(DISTINCT s.size_name ORDER BY s.size_name SEPARATOR ', ') AS sizes,
-                      GROUP_CONCAT(DISTINCT m.material_name ORDER BY m.material_name SEPARATOR ', ') AS materials,
-                      GROUP_CONCAT(DISTINCT b.brand_name ORDER BY b.brand_name SEPARATOR ', ') AS brands,
-                      GROUP_CONCAT(DISTINCT cat.category_name ORDER BY cat.category_name SEPARATOR ', ') AS categories,
-                      GROUP_CONCAT(DISTINCT cat.category_id ORDER BY cat.category_id SEPARATOR ', ') AS categoryId,
-                      MIN(pi.product_image_url) AS product_image,
-                      COALESCE(sold_table.sold, 0) AS sold
-                  FROM products p
-                  LEFT JOIN product_variants pv ON p.product_id = pv.product_id 
-                  LEFT JOIN colors c ON pv.color_id = c.color_id 
-                  LEFT JOIN sizes s ON pv.size_id = s.size_id 
-                  LEFT JOIN materials m ON pv.material_id = m.material_id 
-                  LEFT JOIN brands b ON pv.brand_id = b.brand_id 
-                  LEFT JOIN categories cat ON pv.category_id = cat.category_id 
-                  LEFT JOIN product_images pi ON p.product_id = pi.product_id
-                  LEFT JOIN reviews r ON r.product_id = p.product_id
-                  LEFT JOIN (
-                      SELECT product_id, SUM(quantity) AS sold
-                      FROM order_details
-                      GROUP BY product_id
-                  ) AS sold_table ON sold_table.product_id = p.product_id
-                  GROUP BY p.product_id;
+    const query = `SELECT 
+                          p.product_id, 
+                          p.product_name, 
+                          p.description, 
+                          p.discount,
+                          p.created_at,
+                          ROUND(AVG(r.rating), 1) AS rating,
+                          MIN(pv.price) AS price,
+                          GROUP_CONCAT(DISTINCT c.color_name ORDER BY c.color_name SEPARATOR ', ') AS colors,
+                          GROUP_CONCAT(DISTINCT s.size_name ORDER BY s.size_name SEPARATOR ', ') AS sizes,
+                          GROUP_CONCAT(DISTINCT m.material_name ORDER BY m.material_name SEPARATOR ', ') AS materials,
+                          GROUP_CONCAT(DISTINCT b.brand_name ORDER BY b.brand_name SEPARATOR ', ') AS brands,
+                          GROUP_CONCAT(DISTINCT cat.category_name ORDER BY cat.category_name SEPARATOR ', ') AS categories,
+                          GROUP_CONCAT(DISTINCT cat.category_id ORDER BY cat.category_id SEPARATOR ', ') AS categoryId,
+                          MIN(pi.product_image_url) AS product_image,
+                          COALESCE(MAX(sold_table.sold), 0) AS sold
+                      FROM products p
+                      LEFT JOIN product_variants pv ON p.product_id = pv.product_id 
+                      LEFT JOIN colors c ON pv.color_id = c.color_id 
+                      LEFT JOIN sizes s ON pv.size_id = s.size_id 
+                      LEFT JOIN materials m ON pv.material_id = m.material_id 
+                      LEFT JOIN brands b ON pv.brand_id = b.brand_id 
+                      LEFT JOIN categories cat ON pv.category_id = cat.category_id 
+                      LEFT JOIN product_images pi ON p.product_id = pi.product_id
+                      LEFT JOIN reviews r ON r.product_id = p.product_id
+                      LEFT JOIN (
+                          SELECT product_id, SUM(quantity) AS sold
+                          FROM order_details
+                          GROUP BY product_id
+                      ) AS sold_table ON sold_table.product_id = p.product_id
+                      GROUP BY p.product_id;
     `;
 
     connection.query(query, (err, results) => {
