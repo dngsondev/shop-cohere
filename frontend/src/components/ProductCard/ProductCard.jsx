@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { RatingStars } from "../";
 import { getFullImageUrl } from "../../utils/imageUtils";
-import "../../features/Products/ProductEffects.css";
+import styles from "../../features/Products/ProductEffects.module.scss";
 
 function getDiscountedPrice(price, discount) {
     if (!price || !discount) return price;
@@ -62,7 +62,7 @@ function ProductCard({ product, to, isHot }) {
         <Wrapper
             {...wrapperProps}
             ref={cardRef}
-            className="product-card bg-white rounded-xl border border-gray-200 overflow-hidden relative flex flex-col h-full transition-all shadow-sm hover:shadow-lg"
+            className={`${styles['product-card']} bg-white rounded-xl border border-gray-200 overflow-hidden relative flex flex-col h-full transition-all shadow-sm hover:shadow-lg`}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
         >
@@ -78,7 +78,7 @@ function ProductCard({ product, to, isHot }) {
                                     : getFullImageUrl(product.product_image)
                             }
                             alt={product.product_name}
-                            className="product-img w-full h-full object-cover object-center transition-transform duration-300"
+                            className={`${styles['product-img']} w-full h-full object-cover object-center transition-transform duration-300`}
                             onMouseMove={handleImgMove}
                             onMouseLeave={handleImgLeave}
                         />
@@ -90,7 +90,7 @@ function ProductCard({ product, to, isHot }) {
                 </div>
                 <div className="absolute top-3 left-3 flex gap-2">
                     {discountNum > 0 && discountNum < 100 && (
-                        <span className="discount-badge bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow">
+                        <span className={`${styles['discount-badge']} bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow`}>
                             -{discountNum}%
                         </span>
                     )}

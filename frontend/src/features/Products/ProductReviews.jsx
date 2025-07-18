@@ -6,19 +6,14 @@ import { getFullImageUrl } from "../../utils/imageUtils";
 import { useToast } from "../../components/Toast/Toast";
 
 function ProductReviews({ reviews, colors, sizes, productId, variants }) {
-
-    // console.log(colors, sizes);
-    console.log("Reviews data:", reviews);
-
     const { showToast } = useToast();
 
-    // if (localStorage.getItem("user")) {
-    //     console.log("User is logged in:", JSON.parse(localStorage.getItem("user")).id);
-    //     const userId = JSON.parse(localStorage.getItem("user")).id;
-    // }
+    const [reviewList, setReviewList] = useState(reviews?.data || []);
+    useEffect(() => {
+        setReviewList(reviews?.data || []);
+    }, [reviews]);
 
     // Xử lý dữ liệu
-    const reviewList = reviews?.data || [];
     const totalReviews = reviewList.length;
     const avgRating = totalReviews
         ? (reviewList.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
@@ -55,17 +50,23 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
     const [selectedColor, setSelectedColor] = useState(colors[0]?.color_id || "");
     const [selectedSize, setSelectedSize] = useState(sizes[0]?.size_id || "");
     const [reviewMedia, setReviewMedia] = useState([]); // Lưu mảng file
-    // State cho variant_id
     const [selectedVariantId, setSelectedVariantId] = useState(null);
 
     // Hàm tìm variant_id theo color_id và size_id
     const findVariantId = (colorId, sizeId) => {
         if (!variants) return null;
-        return Object.keys(variants).find(
-            key =>
-                variants[key].color_id === Number(colorId) &&
-                variants[key].size_id === Number(sizeId)
+        // Nếu là mảng
+        if (Array.isArray(variants)) {
+            const found = variants.find(
+                v => Number(v.color_id) === Number(colorId) && Number(v.size_id) === Number(sizeId)
+            );
+            return found ? Number(found.variant_id) : null;
+        }
+        // Nếu là object (phòng trường hợp dữ liệu khác)
+        const found = Object.values(variants).find(
+            v => Number(v.color_id) === Number(colorId) && Number(v.size_id) === Number(sizeId)
         );
+        return found ? Number(found.variant_id) : null;
     };
 
     // Khi chọn màu hoặc size thì cập nhật variant_id
@@ -81,34 +82,11 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
         setSelectedVariantId(variantId ? Number(variantId) : null);
     };
 
-    // useEffect(() => {
-    //     //Xoá đánh giá sản phẩm
-    //     const reviewId = reviews?.data?.[0]?.id; // Giả lập lấy reviewId đầu tiên
-    //     const userId = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).id : null;
+    console.log("Selected variant_id:", selectedVariantId);
 
-    //     try {
-    //         if (reviewId && userId) {
-    //             if (reviewList.length > 0 && reviewList[0].customer_id === userId) {
-    //                 // Giả lập xoá đánh giá
-    //                 console.log("Xoá đánh giá:", reviewId);
-    //                 // Gọi API xoá đánh giá
-    //                 // productService.deleteReview(reviewId)
-    //                 //     .then(() => {
-    //                 //         console.log("Đánh giá đã được xoá thành công");
-    //                 //     })
-    //                 //     .catch(error => {
-    //                 //         console.error("Lỗi khi xoá đánh giá:", error);
-    //                 //     });
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.error("Error initializing product service:", error);
-    //     }
 
-    // }, [reviews]);
-
-    // Xử lý gửi đánh giá (giả lập, bạn cần thay bằng API thực tế)
-    const handleSubmitReview = (e) => {
+    // Xử lý gửi đánh giá
+    const handleSubmitReview = async (e) => {
         e.preventDefault();
         if (!newRating || !newComment.trim()) return;
         setSubmitting(true);
@@ -116,44 +94,38 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
         try {
             const formData = new FormData();
             formData.append("productId", productId);
+
+            // Chỉ gửi variant_id nếu có giá trị hợp lệ
+            // if (selectedVariantId && Number(selectedVariantId) > 0) {
             formData.append("variantId", selectedVariantId);
-            formData.append("customerId", localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).id : null);
+            console.log("Submitting review for variant_id:", selectedVariantId);
+
+            // }
+
+            const userId = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).id : "";
+            if (userId) formData.append("customerId", userId);
             formData.append("rating", newRating);
             formData.append("comment", newComment);
-            // formData.append("color_id", selectedColor);
-            // formData.append("size_id", selectedSize);
-            reviewMedia.forEach(file => formData.append("media", file)); // "media" là tên field, backend phải hỗ trợ mảng file
+            reviewMedia.forEach(file => formData.append("media", file));
 
-            // console.log("123", formData);
-            for (let pair of formData.entries()) {
-                console.log(pair[0], pair[1]);
-            }
+            await productService.createReview(productId, formData);
 
-            // Gọi API gửi đánh giá
-            productService.createReview(productId, formData)
-                .then(() => {
-                    // alert("Đánh giá của bạn đã được gửi thành công!");
-                    showToast("bạn đã đánh giá thành công!", "success");
-                });
+            // Sau khi gửi thành công, load lại danh sách đánh giá
+            const res = await productService.getProductReviews(productId);
+            setReviewList(res.data?.data || []);
+            showToast("Đánh giá đã được gửi!", "success");
 
+            // Reset form
+            setNewRating(0);
+            setHoverRating(0);
+            setNewComment("");
+            setReviewMedia([]);
+            setSubmitting(false);
         } catch (error) {
             console.error("Error submitting review:", error);
-            // alert("Đã có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.");
             showToast("Đã có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.", "error");
             setSubmitting(false);
-            return;
         }
-
-        // setTimeout(() => {
-        //     alert(
-        //         `Đánh giá của bạn đã được gửi!\nLoại: ${selectedColor} - ${selectedSize}`
-        //     );
-        //     setNewRating(0);
-        //     setHoverRating(0);
-        //     setNewComment("");
-        //     setReviewMedia([]);
-        //     setSubmitting(false);
-        // }, 1000);
     };
 
     useEffect(() => {
@@ -362,14 +334,8 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
                         <div className="text-gray-500 mt-4">Chưa có đánh giá nào cho sản phẩm này.</div>
                     ) : (
                         paginated.map((r, idx) => {
-
                             const images = r.media?.filter(url => url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) || [];
                             const anh = images.map(url => getFullImageUrl(url));
-                            console.log("Ảnh:", anh);
-
-                            console.log("Review data:", r);
-
-
                             const user = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")) : null;
                             const isOwnReview = user && r.customer_id === user.id;
 
@@ -436,15 +402,12 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
                                                         const user = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")) : null;
                                                         const res = await productService.deleteReview(r.review_id, user.id);
                                                         if (res.data && res.data.success) {
-                                                            // alert("Đã xóa đánh giá!");
                                                             showToast("Đã xóa đánh giá!", "success");
                                                             window.location.reload();
                                                         } else {
-                                                            // alert(res.data?.message || "Xóa thất bại!");
                                                             showToast(res.data?.message || "Xóa thất bại!", "error");
                                                         }
                                                     } catch (error) {
-                                                        // alert("Lỗi khi xóa đánh giá!");
                                                         showToast("Lỗi khi xóa đánh giá!", "error");
                                                         console.error("Error deleting review:", error);
                                                     }

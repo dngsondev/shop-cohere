@@ -104,6 +104,20 @@ const Header = React.memo(({ setLogin }) => {
         refreshCartCount();
     }, [customerId]);
 
+    // Cập nhật số lượng giỏ hàng khi có sự kiện từ localStorage
+    useEffect(() => {
+        const handleCartQuantityUpdate = () => {
+            const storedQuantity = localStorage.getItem('cartQuantity');
+            setCartQuantity(Number(storedQuantity) || 0);
+        };
+
+        window.addEventListener('cartQuantityUpdated', handleCartQuantityUpdate);
+
+        return () => {
+            window.removeEventListener('cartQuantityUpdated', handleCartQuantityUpdate);
+        };
+    }, []);
+
     // Gợi ý sản phẩm khi nhập
     const handleSearchInput = async (e) => {
         const value = e.target.value;
@@ -266,19 +280,13 @@ const Header = React.memo(({ setLogin }) => {
                                     onLoad={() => {
                                         console.log('✅ Header avatar loaded:', userInfo.avatar);
                                     }}
-                                    onError={(e) => {
-                                        console.error('❌ Header avatar failed to load:', userInfo.avatar);
-                                        // Fallback to initials
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'flex';
-                                    }}
+                                // onError={(e) => {
+                                //     console.error('❌ Header avatar failed to load:', userInfo.avatar);
+                                //     // Fallback to initials
+                                //     e.target.style.display = 'none';
+                                //     e.target.nextSibling.style.display = 'flex';
+                                // }}
                                 />
-                                {/* Fallback avatar with initials */}
-                                <div
-                                    className="absolute inset-0 w-10 h-10 rounded-full border-2 border-blue-400 shadow bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-sm font-bold hidden"
-                                >
-                                    {(userInfo.fullname || userInfo.username || 'U').charAt(0).toUpperCase()}
-                                </div>
                             </div>
                         </Link>
                     ) : (

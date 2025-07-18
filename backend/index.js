@@ -63,7 +63,7 @@ app.use('/api/config', configRoutes);
 app.use('/cart', cartRoutes);
 app.use('/order', orderRoutes);
 app.use('/upload', uploadRoutes);
-app.use('/chat', chatRoutes); // Thêm chat routes
+app.use('/chat', chatRoutes);
 
 // Route mặc định
 app.get('/', (req, res) => {
@@ -81,7 +81,8 @@ const createUploadDirectories = () => {
         'uploads/brands',        // Ảnh thương hiệu
         'uploads/banners',       // Ảnh banner/slider
         'uploads/avatars',       // Ảnh đại diện người dùng
-        'uploads/temp'           // Thư mục tạm cho upload
+        'uploads/temp',          // Thư mục tạm cho upload
+        'uploads/commands'
     ];
 
     uploadsDirs.forEach(dir => {

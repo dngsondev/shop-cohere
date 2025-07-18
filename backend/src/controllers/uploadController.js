@@ -111,3 +111,43 @@ export const moveTemporaryToFinal = async (sessionId, content) => {
 
     return updatedContent;
 };
+
+export const uploadCommandFile = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Không có file nào được tải lên' });
+        }
+        // Đường dẫn file đã lưu: req.file.path hoặc req.file.filename
+        res.json({ success: true, filename: req.file.filename, path: req.file.path });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi khi lưu file', error: error.message });
+    }
+};
+
+const commandsDir = path.join(__dirname, '../../uploads/commands');
+
+export const getCommandFiles = (req, res) => {
+    try {
+        if (!fs.existsSync(commandsDir)) {
+            fs.mkdirSync(commandsDir, { recursive: true });
+        }
+        const files = fs.readdirSync(commandsDir).filter(f => !fs.statSync(path.join(commandsDir, f)).isDirectory());
+        res.json({ success: true, files });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy danh sách file', error: error.message });
+    }
+};
+
+export const deleteCommandFile = (req, res) => {
+    try {
+        const { filename } = req.params;
+        const filePath = path.join(commandsDir, filename);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            return res.json({ success: true, message: 'Đã xoá file thành công' });
+        }
+        res.status(404).json({ success: false, message: 'File không tồn tại' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi khi xoá file', error: error.message });
+    }
+};

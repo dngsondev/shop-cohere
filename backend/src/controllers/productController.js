@@ -1077,6 +1077,8 @@ export const getProductReviewsController = async (req, res) => {
 // Tạo đánh giá sản phẩm
 export const createProductReviewsController = async (req, res) => {
     try {
+        console.log(req.body);
+
         const { customerId, rating, comment, variantId } = req.body;
         const productId = req.params.id;
 

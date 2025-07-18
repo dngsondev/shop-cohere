@@ -61,13 +61,13 @@ function DisplayProducts({ products }) {
                                 )}
                             </div>
                             <div className={styles.productRating}>
-                                {product.average_rating ? (
+                                {product.avg_rating ? (
                                     <>
                                         <div className={styles.stars}>
                                             {[...Array(5)].map((_, i) => (
                                                 <span
                                                     key={i}
-                                                    className={`${styles.star} ${i < Math.floor(product.average_rating)
+                                                    className={`${styles.star} ${i < Math.floor(Number(product.avg_rating))
                                                         ? styles.filled
                                                         : styles.empty
                                                         }`}
@@ -77,7 +77,7 @@ function DisplayProducts({ products }) {
                                             ))}
                                         </div>
                                         <span className={styles.ratingNumber}>
-                                            ({product.average_rating.toFixed(1)})
+                                            ({Number(product.avg_rating).toFixed(1)})
                                         </span>
                                     </>
                                 ) : (

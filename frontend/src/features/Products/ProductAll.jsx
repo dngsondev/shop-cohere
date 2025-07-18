@@ -4,7 +4,7 @@ import { RatingStars, ProductCard } from "../../components";
 import productService from "../../services/productService";
 import { sortProducts } from "../../utils/sortProducts";
 // import { getFullImageUrl } from "../../utils/imageUtils";
-import "./ProductEffects.css";
+import styles from "./ProductEffects.module.scss";
 
 // function getDiscountedPrice(price, discount) {
 //     if (!price || !discount) return price;
@@ -36,7 +36,7 @@ function ProductImage({ src, alt }) {
             ref={imgRef}
             src={src}
             alt={alt}
-            className="product-img w-full h-full object-cover object-center transition-transform duration-300"
+            className={`${styles['product-img']} w-full h-full object-cover object-center transition-transform duration-300`}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
         />

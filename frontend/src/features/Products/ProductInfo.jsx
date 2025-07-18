@@ -7,9 +7,30 @@ import cartService from "../../services/cartService";
 import { refreshCartQuantity } from '../../utils/cartUtils';
 import { getFullImageUrl } from "../../utils/imageUtils";
 
+import { useToast } from "../../components/Toast/Toast";
+
 function ProductInfo({ product }) {
 
-    console.log("ProductInfo component - product:", product);
+    const { showToast } = useToast();
+
+    // Xử lý variants: luôn trả về mảng các object variant
+    let variantsList = [];
+    if (product.variants) {
+        if (typeof product.variants === "string") {
+            try {
+                const parsed = JSON.parse(product.variants);
+                variantsList = Array.isArray(parsed)
+                    ? parsed
+                    : Object.values(parsed);
+            } catch {
+                variantsList = [];
+            }
+        } else if (Array.isArray(product.variants)) {
+            variantsList = product.variants;
+        } else if (typeof product.variants === "object") {
+            variantsList = Object.values(product.variants);
+        }
+    }
 
     const [number, setNumber] = useState(1);
     const [color, setColor] = useState(null);
@@ -24,39 +45,51 @@ function ProductInfo({ product }) {
     const handleImageClick = () => setShowModal(true);
     const handleCloseModal = () => setShowModal(false);
 
-    // Chuyển "variants" từ chuỗi JSON sang mảng object
-    const variantsObj = product.variants && typeof product.variants === "string"
-        ? JSON.parse(product.variants)
-        : product.variants;
+    // Lấy danh sách màu và size duy nhất
+    const uniqueColors = [...new Map(variantsList.map(v => [v.color, v])).values()];
+    const uniqueSizes = [...new Map(variantsList.map(v => [v.size, v])).values()];
 
-    const variantsList = Object.entries(variantsObj).map(([variant_id, data]) => ({
-        ...data,
-        variant_id: Number(variant_id)
-    }));
-
-    const handlePrev = () => {
-        if (startIndex > 0) {
-            setSlideDirection("left");
-            setIsSliding(true);
-            setStartIndex(startIndex - 1);
-            setTimeout(() => setIsSliding(false), 300);
-        }
+    // Hàm kiểm tra có thể chọn màu này không (dựa trên size đã chọn)
+    const isColorAvailable = (colorToCheck) => {
+        if (!size) return true;
+        const availableVariant = variantsList.find(v =>
+            v.color.trim().toLowerCase() === colorToCheck.trim().toLowerCase() &&
+            v.size.trim().toLowerCase() === (size ? size.trim().toLowerCase() : "") &&
+            v.quantity > 0
+        );
+        return !!availableVariant;
     };
 
-    const handleNext = () => {
-        if (startIndex + visibleImages < allImages.length) {
-            setSlideDirection("right");
-            setIsSliding(true);
-            setStartIndex(startIndex + 1);
-            setTimeout(() => setIsSliding(false), 300);
-        }
+    // Hàm kiểm tra có thể chọn size này không (dựa trên màu đã chọn)
+    const isSizeAvailable = (sizeToCheck) => {
+        if (!color) return true;
+        const availableVariant = variantsList.find(v =>
+            v.color.trim().toLowerCase() === (color ? color.trim().toLowerCase() : "") &&
+            v.size.trim().toLowerCase() === sizeToCheck.trim().toLowerCase() &&
+            v.quantity > 0
+        );
+        return !!availableVariant;
     };
 
+    // Hàm lấy tổng số lượng theo màu
+    const getColorTotalQuantity = (colorToCheck) => {
+        return variantsList
+            .filter(v => v.color.trim().toLowerCase() === colorToCheck.trim().toLowerCase())
+            .reduce((total, v) => total + (v.quantity || 0), 0);
+    };
+
+    // Hàm lấy tổng số lượng theo size
+    const getSizeTotalQuantity = (sizeToCheck) => {
+        return variantsList
+            .filter(v => v.size.trim().toLowerCase() === sizeToCheck.trim().toLowerCase())
+            .reduce((total, v) => total + (v.quantity || 0), 0);
+    };
+
+    // Hàm chọn biến thể đúng theo color và size
     const handleSelectVariant = (selectedColor, selectedSize) => {
         setColor(selectedColor);
         setSize(selectedSize);
 
-        // Tìm đúng biến thể
         const variantData = variantsList.find(
             v => v.color === selectedColor && v.size === selectedSize
         );
@@ -75,9 +108,6 @@ function ProductInfo({ product }) {
         }
     };
 
-    console.log("Selected variant ID:", selectedVariant);
-    console.log("Selected variant data:", selectedVariantData);
-
     const [selectedImage, setSelectedImage] = useState(
         `/${product.product_images.split(",")[0]}`
     );
@@ -92,52 +122,9 @@ function ProductInfo({ product }) {
     const [startIndex, setStartIndex] = useState(0);
     const visibleImages = 4;
 
-    const uniqueColors = [...new Map(variantsList.map(v => [v.color, v])).values()];
-    const uniqueSizes = [...new Map(variantsList.map(v => [v.size, v])).values()];
-
-    // Hàm kiểm tra có thể chọn màu này không (dựa trên size đã chọn)
-    const isColorAvailable = (colorToCheck) => {
-        if (!size) return true; // Nếu chưa chọn size thì tất cả màu đều có thể chọn
-
-        const availableVariant = variantsList.find(v =>
-            v.color.trim().toLowerCase() === colorToCheck.trim().toLowerCase() &&
-            v.size.trim().toLowerCase() === size.trim().toLowerCase() &&
-            v.quantity > 0
-        );
-
-        return !!availableVariant;
-    };
-
-    // Hàm kiểm tra có thể chọn size này không (dựa trên màu đã chọn)
-    const isSizeAvailable = (sizeToCheck) => {
-        if (!color) return true; // Nếu chưa chọn màu thì tất cả size đều có thể chọn
-
-        const availableVariant = variantsList.find(v =>
-            v.color.trim().toLowerCase() === color.trim().toLowerCase() &&
-            v.size.trim().toLowerCase() === sizeToCheck.trim().toLowerCase() &&
-            v.quantity > 0
-        );
-
-        return !!availableVariant;
-    };
-
-    // Hàm lấy tổng số lượng theo màu (để hiển thị màu có hàng hay không)
-    const getColorTotalQuantity = (colorToCheck) => {
-        return variantsList
-            .filter(v => v.color.trim().toLowerCase() === colorToCheck.trim().toLowerCase())
-            .reduce((total, v) => total + (v.quantity || 0), 0);
-    };
-
-    // Hàm lấy tổng số lượng theo size (để hiển thị size có hàng hay không)
-    const getSizeTotalQuantity = (sizeToCheck) => {
-        return variantsList
-            .filter(v => v.size.trim().toLowerCase() === sizeToCheck.trim().toLowerCase())
-            .reduce((total, v) => total + (v.quantity || 0), 0);
-    };
-
     const allImages = [...new Set([
         ...product.product_images.split(","),
-        ...variantsList.map(v => v.image_url).filter(url => url) // Lọc bỏ null/undefined
+        ...variantsList.map(v => v.image_url).filter(url => url)
     ])];
 
     const formatPrice = (price) => {
@@ -180,26 +167,21 @@ function ProductInfo({ product }) {
             }
 
             const variantId = selectedVariant;
-            console.log("Adding to cart - Customer ID:", customerId, "Product ID:", product?.product_id, "Variant ID:", variantId, "Quantity:", quantity);
-
             cartService.addToCart(customerId, product?.product_id, variantId, quantity)
                 .then((response) => {
                     if (response.status === 200) {
-                        console.log("Thêm vào giỏ hàng thành công:", response.data);
                         refreshCartQuantity(customerId);
-                        alert("Đã thêm sản phẩm vào giỏ hàng!");
+                        showToast("Đã thêm sản phẩm vào giỏ hàng!", "success");
+                        // alert("Đã thêm sản phẩm vào giỏ hàng!");
                     } else {
-                        console.error("Lỗi khi thêm vào giỏ hàng:", response.data);
-                        alert("Có lỗi xảy ra khi thêm vào giỏ hàng!");
+                        showToast("Có lỗi xảy ra khi thêm vào giỏ hàng!", "error");
                     }
                 })
-                .catch((error) => {
-                    console.error("Lỗi khi thêm vào giỏ hàng:", error);
-                    alert("Có lỗi xảy ra khi thêm vào giỏ hàng!");
+                .catch(() => {
+                    showToast("Có lỗi xảy ra khi thêm vào giỏ hàng!", "error");
                 });
-        } catch (error) {
-            console.error("Lỗi khi thêm vào giỏ hàng:", error);
-            alert("Có lỗi xảy ra!");
+        } catch {
+            showToast("Có lỗi xảy ra!", "error");
         }
     }
 
@@ -220,7 +202,6 @@ function ProductInfo({ product }) {
             ]
         };
         sessionStorage.setItem("orderData", JSON.stringify(orderData));
-        // Chuyển hướng sang trang order
         window.location.href = "/order";
     };
 
@@ -270,12 +251,16 @@ function ProductInfo({ product }) {
                     {/* Thanh ảnh thumbnail với điều hướng */}
                     <div className="relative mt-4 flex items-center">
                         {startIndex > 0 && (
-                            <button className="absolute left-0 p-2 bg-gray-200 rounded-full shadow-md" onClick={handlePrev}>
+                            <button className="absolute left-0 p-2 bg-gray-200 rounded-full shadow-md" onClick={() => {
+                                setSlideDirection("left");
+                                setIsSliding(true);
+                                setStartIndex(startIndex - 1);
+                                setTimeout(() => setIsSliding(false), 300);
+                            }}>
                                 <ChevronLeft size={20} />
                             </button>
                         )}
 
-                        {/* Hiển thị thumbnail nếu có ảnh */}
                         {allImages && allImages.length > 0 && (
                             <div className="flex gap-2 mx-8 overflow-hidden">
                                 {allImages.slice(startIndex, startIndex + visibleImages).map((img, index) => (
@@ -292,7 +277,12 @@ function ProductInfo({ product }) {
                         )}
 
                         {startIndex + visibleImages < allImages.length && (
-                            <button className="absolute right-0 p-2 bg-gray-200 rounded-full shadow-md" onClick={handleNext}>
+                            <button className="absolute right-0 p-2 bg-gray-200 rounded-full shadow-md" onClick={() => {
+                                setSlideDirection("right");
+                                setIsSliding(true);
+                                setStartIndex(startIndex + 1);
+                                setTimeout(() => setIsSliding(false), 300);
+                            }}>
                                 <ChevronRight size={20} />
                             </button>
                         )}

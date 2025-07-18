@@ -187,6 +187,11 @@ const ensureDirectoryExists = (dirPath) => {
     }
 };
 
+export const commandFileUpload = multer({
+    storage: createStorage('commands'),
+    limits: { fileSize: 5 * 1024 * 1024, files: 1 }
+});
+
 // Create all required directories
 const uploadDirs = [
     'uploads/products',
@@ -212,6 +217,7 @@ export default {
     brandImageUpload,
     bannerImageUpload,
     avatarImageUpload,
-    getImageUrl,
-    deleteImage
+    // getImageUrl,
+    // deleteImage,
+    commandFileUpload
 };

@@ -1,12 +1,27 @@
 import { useState, useEffect } from "react";
 import adminSevice from "../../../services/adminService";
-import { getWordReader } from "../../../utils/WordReaderUtil";
+import botService from "../../../services/botService";
+import { MdDownload, MdDelete } from "react-icons/md";
 
 function Commands() {
     const [command, setCommand] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [updateStatus, setUpdateStatus] = useState(null);
+    const [files, setFiles] = useState([]);
+
+    const MAX_FILES = 3;
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+    // Lấy danh sách file đã upload
+    const fetchFiles = async () => {
+        try {
+            const res = await botService.getCommandFiles();
+            setFiles(res.data.files || []);
+        } catch (err) {
+            setFiles([]);
+        }
+    };
 
     useEffect(() => {
         const fetchCommands = async () => {
@@ -27,6 +42,7 @@ function Commands() {
             }
         };
         fetchCommands();
+        fetchFiles();
     }, []);
 
     const handleSubmit = async (e) => {
@@ -43,12 +59,44 @@ function Commands() {
 
     const handleFile = async (e) => {
         const file = e.target.files[0];
+        if (!file) return;
+
+        if (files.length >= MAX_FILES) {
+            setUpdateStatus("Chỉ được thêm tối đa 3 file lệnh!");
+            return;
+        }
+        if (file.size > MAX_SIZE) {
+            setUpdateStatus("File quá lớn! Dung lượng tối đa là 5MB.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('commandFile', file);
+
+        setUpdateStatus("Đang tải file lên...");
         try {
-            const text = await getWordReader(file);
-            // Thêm nội dung file vào cuối nội dung hiện tại, cách ra 1 dòng nếu có sẵn nội dung
-            setCommand(prev => prev ? prev + "\n" + text : text);
+            await botService.uploadCommandFile(formData);
+            setUpdateStatus("Đã lưu file thành công!");
+            fetchFiles();
+            setTimeout(() => setUpdateStatus(null), 3000);
         } catch (err) {
-            alert("Không thể đọc file: " + err);
+            setUpdateStatus("Lỗi khi lưu file: " + err.message);
+        }
+    };
+
+    const handleDownload = (filename) => {
+        window.open(`${import.meta.env.VITE_BACKEND_URL}/uploads/commands/${filename}`, "_blank");
+    };
+
+    const handleDelete = async (filename) => {
+        if (!window.confirm("Bạn có chắc muốn xoá file này?")) return;
+        try {
+            await botService.deleteCommandFile(filename);
+            setUpdateStatus("Đã xoá file thành công!");
+            fetchFiles();
+            setTimeout(() => setUpdateStatus(null), 3000);
+        } catch (err) {
+            setUpdateStatus("Lỗi khi xoá file: " + err.message);
         }
     };
 
@@ -120,7 +168,45 @@ function Commands() {
                     )}
                 </div>
             </form>
-        </div>
+            <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-2 text-gray-700">File hiện tại</h3>
+                <p className="text-sm text-gray-500 mb-1">Lưu ý: Bạn chỉ có thể tải lên file .docx hoặc .txt
+                    và mỗi file không được vượt quá 5MB. Tối đa 3 file.
+                </p>
+                {files.length === 0 ? (
+                    <div className="text-gray-500">Chưa có file nào.</div>
+                ) : (
+                    <ul className="space-y-3">
+                        {files.map((file) => (
+                            <li
+                                key={file}
+                                className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition"
+                            >
+                                <div className="flex items-center gap-2 w-2/3">
+                                    <span className="truncate font-medium text-gray-800">{file}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 transition text-sm font-semibold"
+                                        onClick={() => handleDownload(file)}
+                                    >
+                                        <MdDownload size={20} />
+                                        Tải về
+                                    </button>
+                                    <button
+                                        className="flex items-center gap-1 px-3 py-1 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 transition text-sm font-semibold"
+                                        onClick={() => handleDelete(file)}
+                                    >
+                                        <MdDelete size={20} />
+                                        Xoá
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </div >
     );
 }
 

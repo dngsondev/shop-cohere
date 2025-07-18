@@ -2,125 +2,36 @@ import cohere from '../config/cohereConfig.js';
 import { getInforToCohere, getIdProducts, getProductsByIdForCohere } from '../models/productModel.js';
 import { getCommand } from '../models/adminModels.js';
 import { getInforToSuggestQuestions } from '../models/cohereModels.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Bộ nhớ lưu hội thoại trước đó
 let chatHistory = [];
 
-// export const sendToCohere = async (req, res) => {
-//     try {
-//         let mentioned_product_id_end = [];
-//         const { question } = req.body;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-//         // Cập nhật lịch sử hội thoại
-//         if (question) {
-//             chatHistory.push(`Người dùng: ${question}`);
-//         }
-
-//         // Giữ lại 5 câu gần nhất từ lịch sử hội thoại
-//         const conversationContext = chatHistory.slice(-5).join("\n");
-
-//         const command = await getCommand();
-//         console.log("Command:", command[0].contents);
-
-//         // Lấy tất cả thông tin sản phẩm từ MySQL
-//         const products = await getInforToCohere();
-
-//         // Tạo thông tin sản phẩm dưới dạng chuỗi liền mạch
-//         const productInfo = products.map(product =>
-//             Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
-//         ).join('\n');
-
-//         const prompt = `${command[0].contents}
-//             Bạn là chatbot bán quần áo và là 1 nhân viên tư vấn chuyên nghiệp. 
-//             Do là 1 nhân viên tư vấn chuyên nghiệp nên bạn không chỉ mỗi trả lời câu hỏi của khách hàng mà còn tư vấn các sản phẩm phù hợp với nhu cầu của khách hàng.
-//             Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cảnh hay những thứ liên quan đến câu hỏi.
-//             Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
-//             Trả lời ngắn gọn, dưới 200 từ.  
-//             Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
-//             Không được nói về những thứ bạn không có dữ liệu được cung cấp từ shop như: chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,...
-//             Thay vào đó hãy gọi khách hàng liên hệ với nhân viên chăm sóc khách hàng của shop.
-
-//             Dữ liệu sản phẩm:  
-//             ${productInfo}
-
-//             Lịch sử hội thoại:  
-//             ${conversationContext}
-
-//             QUY TẮC ĐÁNH DẤU SẢN PHẨM:
-//             - Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC phải đánh dấu sản phẩm đó bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM>TÊN_SẢN_PHẨM</PRODUCT|ID: ID_SẢN_PHẨM>
-//             - CHỈ đánh dấu TÊN SẢN PHẨM bên trong tag, KHÔNG bao gồm màu sắc, kích thước, giá cả hay bất kỳ thông tin mô tả nào khác
-//             - Các thông tin về màu sắc, kích thước, giá cả phải được viết BÊN NGOÀI tag
-//             - Mỗi sản phẩm chỉ được đánh dấu tag MỘT LẦN trong toàn bộ câu trả lời
-//             - Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả
-
-//             VÍ DỤ ĐÚNG:
-//             "Tôi giới thiệu <PRODUCT|ID: 75>Áo Thun Teelab Local Brand Unisex Premium Cotton 380gsm TS268</PRODUCT|ID: 75> với nhiều màu sắc như đen, be, nâu và xanh khói, giá chỉ 420.000đ"
-
-//             VÍ DỤ SAI (TUYỆT ĐỐI KHÔNG LÀM):
-//             "Tôi giới thiệu <PRODUCT|ID: 75>Áo Thun Teelab Local Brand Unisex Premium Cotton 380gsm TS268 với màu đen, be, nâu và xanh khói</PRODUCT|ID: 75>"
-
-//             LƯUÝ QUAN TRỌNG:
-//             - KHÔNG được đưa thông tin màu sắc (đen, be, nâu, xanh, v.v.) vào trong tag <PRODUCT>
-//             - KHÔNG được đưa thông tin kích thước (S, M, L, XL, v.v.) vào trong tag <PRODUCT>  
-//             - KHÔNG được đưa thông tin giá cả vào trong tag <PRODUCT>
-//             - CHỈ có tên chính thức của sản phẩm được phép nằm trong tag
-
-//             Câu hỏi: ${question}  
-//             Trả lời:
-//             `;
-
-//         // Gửi yêu cầu đến Cohere
-//         const response = await cohere.chat({
-//             model: 'command-r-plus',
-//             message: prompt,
-//             max_tokens: 300,
-//             temperature: 0.7,
-//         });
-
-//         // Lưu phản hồi của chatbot vào lịch sử
-//         let answer = response.text.trim();
-//         chatHistory.push(`Bot: ${answer}`);
-//         console.log("Phản hồi từ Cohere:", answer);
-
-//         // Cập nhật regex để xử lý tag chính xác hơn
-//         const regex = /<PRODUCT\|ID:\s*(\d+)>/g;
-//         let match;
-
-//         while ((match = regex.exec(answer)) !== null) {
-//             const productId = match[1];
-//             if (!mentioned_product_id_end.includes(productId)) {
-//                 mentioned_product_id_end.push(productId);
-//             }
-//         }
-
-//         // Xóa tag khỏi câu trả lời - cập nhật regex cho chính xác
-//         answer = answer.replace(/<PRODUCT\|ID:\s*\d+>|<\/PRODUCT\|ID:\s*\d+>/g, '');
-
-//         // Nếu có sản phẩm được đề cập, lấy thông tin chi tiết theo ID
-//         let mentionedProductsInfo = [];
-//         if (mentioned_product_id_end.length > 0) {
-//             mentionedProductsInfo = await getProductsByIdForCohere(mentioned_product_id_end);
-//         }
-
-//         console.log("ID sản phẩm được đề cập:", mentioned_product_id_end);
-//         console.log("Số sản phẩm được đề cập:", mentionedProductsInfo.length);
-
-//         // Trả kết quả về cho frontend kèm theo thông tin sản phẩm
-//         res.json({
-//             success: true,
-//             cohereResponse: answer,
-//             relatedProducts: mentionedProductsInfo // Trả về thông tin sản phẩm liên quan
-//         });
-
-//     } catch (error) {
-//         console.error('Lỗi khi gửi dữ liệu đến Cohere:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Lỗi khi gửi dữ liệu đến Cohere',
-//             error: error.message
-//         });
-//     }
-// };
+// Hàm đọc nội dung file txt/docx
+async function convertFileToText(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.txt') {
+        return fs.promises.readFile(filePath, 'utf8');
+    }
+    // Nếu muốn đọc .docx thì dùng thư viện như 'docx' hoặc 'mammoth'
+    // Ví dụ với mammoth:
+    if (ext === '.docx') {
+        try {
+            const mammoth = await import('mammoth');
+            const buffer = await fs.promises.readFile(filePath);
+            const result = await mammoth.convertToHtml({ buffer });
+            return result.value.replace(/<[^>]+>/g, ''); // loại bỏ tag html
+        } catch (err) {
+            return '';
+        }
+    }
+    return '';
+}
 
 export const sendMessage = async (req, res) => {
     try {
@@ -159,8 +70,36 @@ export const sendMessage = async (req, res) => {
         const command = await getCommand();
         console.log("Command:", command[0].contents);
 
+        // Lấy danh sách file lệnh từ thư mục uploads/commands
+        const commandsDir = path.join(__dirname, '../../uploads/commands');
+        let files = [];
+        if (fs.existsSync(commandsDir)) {
+            files = fs.readdirSync(commandsDir).filter(f => !fs.statSync(path.join(commandsDir, f)).isDirectory());
+        }
+
+        // Đọc nội dung các file lệnh
+        const fileTexts = await Promise.all(
+            files.map(async file => {
+                const filePath = path.join(commandsDir, file);
+                const text = await convertFileToText(filePath);
+                if (!text) {
+                    console.log(`⚠️ Không đọc được nội dung file: ${file}`);
+                }
+                return text;
+            })
+        );
+        const fileContext = fileTexts.join("\n");
+        console.log("File context:", fileContext);
+
+
+
         // Lấy thông tin sản phẩm từ MySQL
         const products = await getInforToCohere();
+
+        // console.log("Sản phẩm:", products);
+
+        const ratedProducts = products.filter(p => p.avg_rating !== null && p.avg_rating !== 'Không có thông tin');
+
 
         // Nếu có userId và productId, có thể lấy thông tin cá nhân hóa
         let personalizedInfo = '';
@@ -178,38 +117,52 @@ export const sendMessage = async (req, res) => {
         }
 
         // Tạo thông tin sản phẩm dưới dạng chuỗi liền mạch
-        const productInfo = products.map(product =>
-            Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
-        ).join('\n');
+        // const productInfo = products.map(product =>
+        //     Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
+        // ).join('\n');
+        const productInfo = (ratedProducts.length > 0 ? ratedProducts : products)
+            .map(product =>
+                Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
+            ).join('\n');
 
+        // Tạo prompt cho Cohere
         const prompt = `${command[0].contents}
-            Bạn là chatbot bán quần áo và là 1 nhân viên tư vấn chuyên nghiệp. 
-            Do là 1 nhân viên tư vấn chuyên nghiệp nên bạn không chỉ mỗi trả lời câu hỏi của khách hàng mà còn tư vấn các sản phẩm phù hợp với nhu cầu của khách hàng.
-            Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cảnh hay những thứ liên quan đến câu hỏi.
-            Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
-            Trả lời ngắn gọn, dưới 200 từ.  
-            Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
-            Không được nói về những thứ bạn không có dữ liệu được cung cấp từ shop như: chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,...
-            Thay vào đó hãy gọi khách hàng liên hệ với nhân viên chăm sóc khách hàng của shop.
-            
-            ${personalizedInfo}
-            
-            Dữ liệu sản phẩm:  
-            ${productInfo}
+${fileContext}
+Bạn là chatbot bán quần áo và là 1 nhân viên tư vấn chuyên nghiệp. 
+Do là 1 nhân viên tư vấn chuyên nghiệp nên bạn không chỉ mỗi trả lời câu hỏi của khách hàng mà còn tư vấn các sản phẩm phù hợp với nhu cầu của khách hàng.
+Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cảnh hay những thứ liên quan đến câu hỏi.
+Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
+Trả lời ngắn gọn, dưới 200 từ. Nếu câu trả lời quá dài hãy tóm lại để khi hiển thị không bị mất chữ và gây ra mất nghĩa của câu.
+Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
+Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
 
-            Lịch sử hội thoại:  
-            ${conversationContext}
+Nếu khách hỏi về chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,... thì:
+- Nếu có dữ liệu liên quan trong phần phía trên (ví dụ: fileContext), hãy trả lời đúng theo dữ liệu đó.
+- Nếu không có dữ liệu nào về vấn đề khách hỏi, hãy hướng dẫn khách liên hệ với nhân viên chăm sóc khách hàng của shop để được hỗ trợ chi tiết.
 
-            Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC phải đánh dấu sản phẩm đó bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM> ... </PRODUCT|ID: ID_SẢN_PHẨM> đúng với ID trong dữ liệu. Không được bỏ sót sản phẩm nào đã nhắc đến.
-            Chỉ đánh dấu tag này cho tên sản phẩm, không đánh dấu cho các thông tin khác như màu sắc, kích thước, chất liệu, v.v.
-            Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả.
+Ví dụ: Nếu có điều khoản đổi trả trong dữ liệu, hãy trả lời đúng nội dung đó. Nếu không có, chỉ nói "Bạn vui lòng liên hệ CSKH để biết thêm chi tiết".
 
-            Ví dụ đúng:
-            Khách hỏi: "Bạn có áo khoác thông gió không?"
-            Trả lời: "<PRODUCT|ID: 80>Áo khoác thông gió a.k.a. AIR-tech jacket AT.02</PRODUCT|ID: 80> là sản phẩm nổi bật với công nghệ AIR-tech™ độc quyền..."
+${personalizedInfo}
 
-            Câu hỏi: ${message}  
-            Trả lời:
+avg_rating là điểm đánh giá trung bình của sản phẩm, được tính từ 1 đến 5 sao.
+
+Dữ liệu sản phẩm:  
+${productInfo}
+
+Lịch sử hội thoại:  
+${conversationContext}
+
+Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC phải đánh dấu sản phẩm đó bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM> ... </PRODUCT|ID: ID_SẢN_PHẨM> đúng với ID trong dữ liệu. 
+Không được bỏ sót sản phẩm nào đã nhắc đến.
+Chỉ đánh dấu tag này cho tên sản phẩm, không được đánh dấu cho các thông tin khác như màu sắc, kích thước, chất liệu, v.v.
+Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả.
+
+Ví dụ đúng:
+Khách hỏi: "Bạn có áo khoác thông gió không?"
+Trả lời: "<PRODUCT|ID: 80>Áo khoác thông gió a.k.a. AIR-tech jacket AT.02</PRODUCT|ID: 80> là sản phẩm nổi bật với công nghệ AIR-tech™ độc quyền..."
+
+Câu hỏi: ${message}  
+Trả lời:
         `;
 
         // Gửi yêu cầu đến Cohere
@@ -225,6 +178,7 @@ export const sendMessage = async (req, res) => {
         chatHistory.push(`Bot: ${answer}`);
         console.log("Phản hồi từ Cohere (SendMessage):", answer);
 
+        // Xử lý tag sản phẩm
         const regex = /<PRODUCT\|ID: ([\d,]+)>.*?<\/PRODUCT\|ID: [\d,]+>/g;
         let match;
 

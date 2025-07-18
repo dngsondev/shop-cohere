@@ -1,7 +1,11 @@
 import express from 'express';
 import * as chatController from '../controllers/chatController.js';
 
+
+
 const router = express.Router();
+
+
 
 // Customer routes
 router.post('/room', chatController.createOrGetRoom);

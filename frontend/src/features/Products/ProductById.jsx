@@ -15,7 +15,7 @@ function ProductById() {
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [reviews, setReviews] = useState([]);
 
-    // console.log(product);
+    console.log("p:", product);
 
 
     useEffect(() => {
@@ -115,7 +115,7 @@ function ProductById() {
                     colors={colors}
                     sizes={sizes}
                     productId={id}
-                    variants={variantsObj} // <-- truyền thêm prop này
+                    variants={variantsObj}
                 />;
             default:
                 return (

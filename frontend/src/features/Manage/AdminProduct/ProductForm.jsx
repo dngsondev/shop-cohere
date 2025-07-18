@@ -4,7 +4,7 @@ import { processQuillContentForEdit, normalizeQuillContentForDB } from '../../..
 import { getFullImageUrl } from '../../../utils/imageUtils';
 import 'react-quill/dist/quill.snow.css';
 import productService from '../../../services/productService';
-import { consolidateProductData, getNameFromId } from '../../../utils/productFormHelpers';
+// import { consolidateProductData, getNameFromId } from '../../../utils/productFormHelpers';
 
 function ProductForm({ form, setForm, handleSubmit, editId, originalFormData, setOriginalFormData }) {
     console.log("ProductForm - Received props:", {
@@ -648,7 +648,7 @@ function ProductForm({ form, setForm, handleSubmit, editId, originalFormData, se
             )}
 
             {/* Thông tin chung */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200 w-full">
                 <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
                     <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -753,7 +753,7 @@ function ProductForm({ form, setForm, handleSubmit, editId, originalFormData, se
                                 onChange={(content) => setForm({ ...form, description: content })}
                                 placeholder="Nhập mô tả sản phẩm..."
                                 className="mb-4"
-                                style={{ borderRadius: 0 }}
+                                style={{ borderRadius: 0, minHeight: '500px' }}
                                 ref={quillEditorRef}
                             />
                         </div>
@@ -854,7 +854,7 @@ function ProductForm({ form, setForm, handleSubmit, editId, originalFormData, se
             </div>
 
             {/* Phân loại sản phẩm - HIỂN THỊ TRỰC TIẾP */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
+            <div className="w-full bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
                 <h2 className="text-xl font-bold text-purple-800 mb-6 flex items-center">
                     <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />

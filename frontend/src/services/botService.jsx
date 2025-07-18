@@ -19,7 +19,26 @@ const botService = {
     // API cho question suggestions
     getQuestionSuggestions: (infor) => axios.get(`${API_URL}/getQuestionSuggestions`, {
         params: { message: infor.message },
-    })
+    }),
+
+    // uploadCommandFile(formData) {
+    //     return fetch('/admin/upload-command-file', {
+    //         method: 'POST',
+    //         body: formData,
+    //     }).then(res => res.json());
+    // }
+
+    // API cho upload command file
+    uploadCommandFile: (formData) => {
+        return axios.post(API_URL + '/upload-command-file', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
+
+    getCommandFiles: () => axios.get(API_URL + '/command-files'),
+    deleteCommandFile: (filename) => axios.delete(API_URL + `/command-files/${filename}`)
 };
 
 export default botService;
