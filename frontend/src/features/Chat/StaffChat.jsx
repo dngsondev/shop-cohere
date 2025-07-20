@@ -16,6 +16,7 @@ const getUserId = () => {
         localStorage.setItem('guest_id', guestId);
     }
     return guestId;
+
 };
 
 function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onRoomCreated }) {
@@ -32,6 +33,8 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
         assignedTo: null
     });
 
+
+
     // Flags để tránh multiple calls
     const [isInitialized, setIsInitialized] = useState(false);
     const initializingRef = useRef(false);
@@ -46,6 +49,8 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
     // Lấy thông tin user
     const userId = user?.id || getUserId();
     const userName = user?.name || JSON.parse(localStorage.getItem('user'))?.name || 'Khách hàng';
+
+    const isGuest = userId.startsWith('guest_');
 
     // Cleanup function
     useEffect(() => {
@@ -130,6 +135,13 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
                 startPolling(globalRoomId);
                 setConnectionStatus('connected');
                 setIsInitialized(true);
+                return;
+            }
+
+            // Nếu là guest thì không gọi API tạo room
+            if (isGuest) {
+                setConnectionStatus('error');
+                setIsLoading(false);
                 return;
             }
 
@@ -315,18 +327,18 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
         initializeChat();
     }, [initializeChat]);
 
-    const getConnectionStatusText = () => {
-        switch (connectionStatus) {
-            case 'connecting': return 'Đang kết nối...';
-            case 'connected':
-                if (staffStatus.isOnline) {
-                    return staffStatus.isTyping ? 'Nhân viên đang nhập...' : 'Trực tuyến';
-                }
-                return staffStatus.lastSeen ? `Hoạt động ${formatTime(staffStatus.lastSeen)}` : 'Ngoại tuyến';
-            case 'error': return 'Lỗi kết nối';
-            default: return 'Đang chờ';
-        }
-    };
+    // const getConnectionStatusText = () => {
+    //     switch (connectionStatus) {
+    //         case 'connecting': return 'Đang kết nối...';
+    //         case 'connected':
+    //             if (staffStatus.isOnline) {
+    //                 return staffStatus.isTyping ? 'Nhân viên đang nhập...' : 'Trực tuyến';
+    //             }
+    //             return staffStatus.lastSeen ? `Hoạt động ${formatTime(staffStatus.lastSeen)}` : 'Ngoại tuyến';
+    //         case 'error': return 'Lỗi kết nối';
+    //         default: return 'Đang chờ';
+    //     }
+    // };
 
     const getStatusColor = () => {
         if (connectionStatus === 'connected' && staffStatus.isOnline) return '#10b981';
@@ -350,9 +362,9 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
                         <div className={styles.staffName}>
                             {staffStatus.assignedTo || 'Hỗ trợ khách hàng'}
                         </div>
-                        <div className={styles.statusText}>
+                        {/* <div className={styles.statusText}>
                             {getConnectionStatusText()}
-                        </div>
+                        </div> */}
                         {roomId && (
                             <div className={styles.roomInfo}>
                                 Room #{roomId}
@@ -387,7 +399,11 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
 
             {/* Messages Container */}
             <div className={styles.messagesContainer}>
-                {connectionStatus === 'error' && (
+                {isGuest ? (
+                    <div className={styles.errorBanner}>
+                        <p>Bạn cần đăng nhập để sử dụng hỗ trợ trực tuyến.</p>
+                    </div>
+                ) : connectionStatus === 'error' && (
                     <div className={styles.errorBanner}>
                         <p>Không thể kết nối đến hỗ trợ. Vui lòng thử lại.</p>
                         <button

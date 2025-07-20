@@ -297,104 +297,45 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
         }
     };
 
-    // const handleCloseChat = () => {
-    //     setShowChat(false);
-    // };
-
-    // const handleSwitchToStaff = () => {
-    //     // Nếu có globalRoomId, thông báo cho parent trước khi chuyển
-    //     if (!globalRoomId && userId) {
-    //         // Tạo room trước khi chuyển sang staff chat
-    //         chatService.createOrGetRoom(userId)
-    //             .then(response => {
-    //                 if (response.data?.success && response.data?.room) {
-    //                     onRoomCreated?.(response.data.room.room_id);
-    //                 }
-    //             })
-    //             .catch(error => {
-    //                 console.error('Error creating room before switch:', error);
-    //             })
-    //             .finally(() => {
-    //                 setChatType('staff');
-    //             });
-    //     } else {
-    //         setChatType('staff');
-    //     }
-    // };
-
-    // // Hàm xóa lịch sử chat
-    // const handleClearHistory = () => {
-    //     if (window.confirm('Bạn có chắc chắn muốn xóa lịch sử chat không?')) {
-    //         sessionStorage.removeItem(sessionKey);
-    //         initializeWelcomeMessage();
-    //     }
-    // };
-
-    // // Hàm export lịch sử chat
-    // const handleExportHistory = () => {
-    //     try {
-    //         const chatHistory = {
-    //             userId: userId,
-    //             productId: productId,
-    //             messages: messages,
-    //             exportTime: new Date().toISOString(),
-    //             sessionKey: sessionKey
-    //         };
-
-    //         const dataStr = JSON.stringify(chatHistory, null, 2);
-    //         const dataBlob = new Blob([dataStr], { type: 'application/json' });
-
-    //         const url = URL.createObjectURL(dataBlob);
-    //         const link = document.createElement('a');
-    //         link.href = url;
-    //         link.download = `chat_history_${new Date().getTime()}.json`;
-    //         document.body.appendChild(link);
-    //         link.click();
-    //         document.body.removeChild(link);
-    //         URL.revokeObjectURL(url);
-    //     } catch (error) {
-    //         console.error('Error exporting chat history:', error);
-    //         alert('Có lỗi xảy ra khi xuất lịch sử chat');
-    //     }
-    // };
-
     return (
         <div className={styles.chatContainer}>
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                            <span className="text-lg font-bold"><img src="public/images/bot/meow.gif" alt="" /></span>
-                        </div>
-                        {/* Dot trạng thái online */}
-                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${isOnline ? 'bg-green-400' : 'bg-gray-400'
-                            }`}></div>
+            <div className={styles.chatHeader}>
+                <div className={styles.headerInfo}>
+                    <div className={styles.avatar}>
+                        <span className={styles.avatarIcon}>
+                            <img src="public/images/bot/meow.gif" alt="" style={{ width: 32, height: 32 }} />
+                        </span>
+                        <div
+                            className={styles.statusDot}
+                            style={{
+                                background: isOnline ? '#22c55e' : '#a3a3a3'
+                            }}
+                        />
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-lg">Trợ lý AI Luna</h3>
-                        <p className="text-blue-100 text-sm">
+                    <div className={styles.staffDetails}>
+                        <span className={styles.staffName}>Trợ lý AI Luna</span>
+                        <span className={styles.statusText}>
                             {isLoading
                                 ? 'Đang trả lời...'
                                 : isOnline
                                     ? 'Đang hoạt động'
                                     : 'Không có sẵn'
                             }
-                        </p>
+                        </span>
                     </div>
                 </div>
-
-                <div className="flex items-center gap-2">
+                <div className={styles.headerActions}>
                     <button
                         onClick={() => setChatType('staff')}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        className={styles.actionButton}
                         title="Chuyển sang chat với nhân viên"
                     >
-                        <span className="text-lg"><MdSupportAgent /></span>
+                        <MdSupportAgent />
                     </button>
                     <button
                         onClick={() => setShowChat(false)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        className={styles.closeButton}
                     >
                         ✕
                     </button>
