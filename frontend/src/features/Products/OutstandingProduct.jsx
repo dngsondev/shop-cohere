@@ -64,20 +64,13 @@ function OutstandingProduct() {
 
                 {/* Danh sách sản phẩm */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                    {displayedProducts.map((product, index) => (
-                        <motion.div
-                            className="outstanding-card flex flex-col h-full bg-white rounded-2xl shadow-md hover:shadow-xl transition-all p-4"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={isInView ? { opacity: 1, y: 0 } : {}}
-                            transition={{ delay: index * 0.2, duration: 0.6 }}
+                    {displayedProducts.map(product => (
+                        <ProductCard
                             key={product.product_id}
-                        >
-                            <ProductCard
-                                product={product}
-                                to={`/product/${product.product_id}`}
-                                isHot={true}
-                            />
-                        </motion.div>
+                            product={product}
+                            to={`/product/${product.product_id}`}
+                            isHot={true}
+                        />
                     ))}
                 </div>
 

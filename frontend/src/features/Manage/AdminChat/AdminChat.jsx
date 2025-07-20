@@ -275,7 +275,7 @@ function AdminChat() {
                         <p>Danh sách các cuộc trò chuyện với khách hàng sẽ hiển thị bên trái</p>
 
                         {/* Quick stats */}
-                        {rooms.length > 0 && (
+                        {/* {rooms.length > 0 && (
                             <div className="mt-6 flex justify-center space-x-6 text-sm text-gray-500">
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-green-600">{activeRoomsCount}</div>
@@ -290,7 +290,7 @@ function AdminChat() {
                                     <div>Tổng cộng</div>
                                 </div>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 )}
             </div>

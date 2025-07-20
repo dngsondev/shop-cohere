@@ -1177,9 +1177,9 @@ export const getProductReviews = (id) => {
         cus.customer_fullname,
         c.color_name, s.size_name, rating, comment, r.created_at,
         GROUP_CONCAT(pvr.url) AS media,
-        rr.reply_id IS NOT NULL AS replied,
-        rr.content AS reply_content,
-        rr.created_at AS reply_created_at
+        MAX(rr.reply_id) IS NOT NULL AS replied,
+        MAX(rr.content) AS reply_content,
+        MAX(rr.created_at) AS reply_created_at
       FROM reviews r
       LEFT JOIN products p ON p.product_id = r.product_id
       LEFT JOIN customers cus ON cus.customer_id = r.customer_id

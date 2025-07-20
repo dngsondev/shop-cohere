@@ -168,7 +168,7 @@ function ChatRoomList({ rooms, selectedRoom, onRoomSelect, error, onRefresh, loa
                 </div>
 
                 {/* Quick Stats */}
-                <div className={styles.quickStats}>
+                {/* <div className={styles.quickStats}>
                     <div className={styles.statChip}>
                         <FaCircle className={styles.waitingDot} />
                         <span>{rooms.filter(r => r.status === 'waiting').length} chờ</span>
@@ -177,7 +177,7 @@ function ChatRoomList({ rooms, selectedRoom, onRoomSelect, error, onRefresh, loa
                         <FaCircle className={styles.activeDot} />
                         <span>{rooms.filter(r => r.status === 'active').length} hoạt động</span>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Search */}

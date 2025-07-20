@@ -353,10 +353,10 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
                 <div className={styles.headerInfo}>
                     <div className={styles.avatar}>
                         <MdSupportAgent className={styles.avatarIcon} />
-                        <div
+                        {/* <div
                             className={styles.statusDot}
                             style={{ backgroundColor: getStatusColor() }}
-                        />
+                        /> */}
                     </div>
                     <div className={styles.staffDetails}>
                         <div className={styles.staffName}>
@@ -365,11 +365,11 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
                         {/* <div className={styles.statusText}>
                             {getConnectionStatusText()}
                         </div> */}
-                        {roomId && (
+                        {/* {roomId && (
                             <div className={styles.roomInfo}>
                                 Room #{roomId}
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
@@ -419,7 +419,7 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
                     <div className={styles.loadingContainer}>
                         <div className={styles.spinner}></div>
                         <p>Đang kết nối với nhân viên hỗ trợ...</p>
-                        {roomId && <small>Room ID: {roomId}</small>}
+                        {/* {roomId && <small>Room ID: {roomId}</small>} */}
                     </div>
                 ) : (
                     <>
@@ -433,7 +433,7 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
                                     </h4>
                                     <p></p>
                                     <p>Chúng tôi sẽ hỗ trợ bạn trong thời gian sớm nhất. Hãy mô tả vấn đề bạn gặp phải.</p>
-                                    {roomId && <small>Room #{roomId} đã được tạo</small>}
+                                    {/* {roomId && <small>Room #{roomId} đã được tạo</small>} */}
                                 </div>
                             </div>
                         ) : (

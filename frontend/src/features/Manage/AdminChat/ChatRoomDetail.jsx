@@ -33,7 +33,7 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
     // Load messages khi room thay đổi
     useEffect(() => {
         if (room?.room_id) {
-            loadMessages();
+            loadMessages(true);
         }
     }, [room?.room_id]);
 
@@ -61,45 +61,42 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
         }
     }, [newMessage]);
 
+    // Polling mỗi 3 giây, KHÔNG set loading
+    useEffect(() => {
+        if (!room?.room_id) return;
+
+        const interval = setInterval(() => {
+            loadMessages(false);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [room?.room_id]);
+
     const scrollToBottom = () => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     };
 
-    const loadMessages = async () => {
+    // Hàm loadMessages gốc, chỉ set loading khi cần
+    const loadMessages = async (showLoading = true) => {
         if (!room?.room_id) return;
 
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             setError(null);
 
-            console.log(`🔄 Loading messages for room: ${room.room_id}`);
             const response = await chatService.getMessages(room.room_id);
 
             if (response.data?.success) {
-                const messages = response.data.messages || [];
-                console.log(`✅ Loaded ${messages.length} messages:`, messages);
-
-                // Kiểm tra format thời gian của tin nhắn đầu tiên
-                if (messages.length > 0) {
-                    console.log(`🕐 First message time format:`, {
-                        created_at: messages[0].created_at,
-                        type: typeof messages[0].created_at,
-                        parsed: new Date(messages[0].created_at),
-                        now: new Date()
-                    });
-                }
-
-                setMessages(messages);
+                setMessages(response.data.messages || []);
             } else {
                 throw new Error(response.data?.message || 'Failed to load messages');
             }
         } catch (error) {
-            console.error('❌ Error loading messages:', error);
             setError('Không thể tải tin nhắn');
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
@@ -198,13 +195,6 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
         }
     };
 
-    const getOnlineStatus = () => {
-        // Giả lập trạng thái online
-        const isOnline = room?.status === 'active';
-        const lastSeenText = isOnline ? 'Đang hoạt động' : 'Đang ngoại tuyến';
-        return { isOnline, lastSeenText };
-    };
-
     const handleAssignRoom = async () => {
         try {
             const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
@@ -248,7 +238,6 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
     };
 
     const isRoomClosed = room?.status === 'closed' || room?.closed_at;
-    const { isOnline, lastSeenText } = getOnlineStatus();
 
     if (!room) {
         return (
@@ -279,9 +268,6 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
                                 {(room.customer_name || 'K').charAt(0).toUpperCase()}
                             </div>
                         )}
-                        <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
-                            <FaCircle />
-                        </div>
                     </div>
 
                     <div className={styles.customerInfo}>
@@ -297,9 +283,8 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
                                     đang nhập...
                                 </span>
                             ) : (
-                                <span className={styles.lastSeen}>
-                                    {lastSeenText}
-                                </span>
+                                // XÓA hiển thị trạng thái hoạt động
+                                <></>
                             )}
                         </div>
                     </div>

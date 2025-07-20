@@ -290,7 +290,7 @@ export const getRoomMessages = (roomId) => {
                 sender_name: msg.sender_name || 'Unknown',
                 sender_avatar: msg.sender_avatar,
                 message: msg.message,
-                is_read: msg.is_read || false,
+                // is_read: msg.is_read || false,
                 created_at: msg.created_at, // Đảm bảo format đúng
                 formatted_time: new Date(msg.created_at).toISOString()
             }));
