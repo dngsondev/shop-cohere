@@ -50,7 +50,7 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
     const userId = user?.id || getUserId();
     const userName = user?.name || JSON.parse(localStorage.getItem('user'))?.name || 'Khách hàng';
 
-    const isGuest = userId.startsWith('guest_');
+    const isGuest = String(userId).startsWith('guest_');
 
     // Cleanup function
     useEffect(() => {
