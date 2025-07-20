@@ -160,10 +160,10 @@ export const getProductsByIdForCohere = (productIds) => {
     const query = `
       SELECT 
         p.product_id, 
-        p.product_name, 
-        p.discount,
-        pv.price, 
-        pi.product_image_url,
+        MIN(p.product_name) AS product_name, 
+        MIN(p.discount) AS discount,
+        MIN(pv.price) AS price, 
+        MIN(pi.product_image_url) AS product_image_url,
         AVG(r.rating) AS avg_rating
       FROM products p
       LEFT JOIN product_variants pv ON p.product_id = pv.product_id
