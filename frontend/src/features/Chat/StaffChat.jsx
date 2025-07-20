@@ -25,7 +25,7 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
     const [roomId, setRoomId] = useState(globalRoomId);
     const [isLoading, setIsLoading] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
-    const [isTyping, setIsTyping] = useState(false);
+    // const [isTyping, setIsTyping] = useState(false);
     const [staffStatus, setStaffStatus] = useState({
         isOnline: false,
         lastSeen: null,
@@ -50,7 +50,7 @@ function StaffChat({ setShowChat, chatType, setChatType, user, globalRoomId, onR
     const userId = user?.id || getUserId();
     const userName = user?.name || JSON.parse(localStorage.getItem('user'))?.name || 'Khách hàng';
 
-    const isGuest = String(userId).startsWith('guest_');
+    const isGuest = !user?.id;
 
     // Cleanup function
     useEffect(() => {
