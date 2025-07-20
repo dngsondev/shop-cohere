@@ -6,7 +6,7 @@ export const createChatRoom = async (customerId) => {
         try {
             const query = `
                 INSERT INTO chat_rooms (customer_id, status, created_at) 
-                VALUES (?, 'waiting', NOW())
+                VALUES (?, 'pending', NOW())
             `;
 
             connection.query(query, [customerId], (err, result) => {
@@ -18,7 +18,7 @@ export const createChatRoom = async (customerId) => {
                 resolve({
                     room_id: result.insertId,
                     customer_id: customerId,
-                    status: 'waiting',
+                    status: 'pending',
                     created_at: new Date()
                 });
             });
@@ -37,7 +37,7 @@ export const createChatRoom = async (customerId) => {
 //             const findActiveRoomQuery = `
 //                 SELECT * FROM chat_rooms 
 //                 WHERE customer_id = ? 
-//                 AND status IN ('waiting', 'active', 'pending')
+//                 AND status IN ('pending', 'active', 'pending')
 //                 ORDER BY created_at DESC 
 //                 LIMIT 1
 //             `;
@@ -73,7 +73,7 @@ export const createChatRoom = async (customerId) => {
 //                 console.log(`🆕 Creating new room for customer: ${customerId}`);
 //                 const createRoomQuery = `
 //                     INSERT INTO chat_rooms (customer_id, status, created_at, last_message_at) 
-//                     VALUES (?, 'waiting', NOW(), NOW())
+//                     VALUES (?, 'pending', NOW(), NOW())
 //                 `;
 
 //                 connection.query(createRoomQuery, [customerId], (err, result) => {
@@ -112,7 +112,7 @@ export const getOrCreateRoom = async (customerId) => {
                 FROM chat_rooms cr
                 LEFT JOIN customers c ON cr.customer_id = c.customer_id
                 WHERE cr.customer_id = ? 
-                AND cr.status IN ('waiting', 'active', 'pending')
+                AND cr.status IN ('pending', 'active', 'closed')
                 ORDER BY cr.created_at DESC 
                 LIMIT 1
             `;
@@ -134,7 +134,7 @@ export const getOrCreateRoom = async (customerId) => {
                 console.log(`🆕 Creating new room for customer: ${customerId}`);
                 const createRoomQuery = `
                     INSERT INTO chat_rooms (customer_id, status, created_at, last_message_at) 
-                    VALUES (?, 'waiting', NOW(), NOW())
+                    VALUES (?, 'pending', NOW(), NOW())
                 `;
 
                 connection.query(createRoomQuery, [customerId], (err, result) => {
@@ -228,7 +228,7 @@ export const getAllChatRooms = () => {
                     const filteredResults = results.filter(room => room.last_message !== null);
                     const formattedResults = filteredResults.map(room => ({
                         ...room,
-                        status: room.status || (room.closed_at ? 'closed' : 'waiting'),
+                        status: room.status || (room.closed_at ? 'closed' : 'pending'),
                         customer_name: room.customer_name || 'Khách hàng',
                         admin_name: room.admin_name || null,
                         message_count: parseInt(room.message_count) || 0
@@ -241,7 +241,7 @@ export const getAllChatRooms = () => {
                 const filteredResults = results.filter(room => room.last_message !== null);
                 const formattedResults = filteredResults.map(room => ({
                     ...room,
-                    status: room.status || (room.closed_at ? 'closed' : 'waiting'),
+                    status: room.status || (room.closed_at ? 'closed' : 'pending'),
                     customer_name: room.customer_name || 'Khách hàng',
                     admin_name: room.admin_name || null,
                     message_count: parseInt(room.message_count) || 0
@@ -385,7 +385,7 @@ export const assignRoomToAdmin = (roomId, adminId) => {
         const query = `
             UPDATE chat_rooms 
             SET admin_id = ?, status = 'active', assigned_at = NOW()
-            WHERE room_id = ? AND status IN ('waiting', 'pending')
+            WHERE room_id = ? AND status IN ('pending', 'closed')
         `;
 
         connection.query(query, [adminId, roomId], (err, result) => {
@@ -414,7 +414,7 @@ export const closeRoom = (roomId, adminId) => {
         const query = `
             UPDATE chat_rooms 
             SET status = 'closed', closed_at = NOW(), closed_by = ?
-            WHERE room_id = ? AND status IN ('waiting', 'active', 'pending')
+            WHERE room_id = ? AND status IN ('pending', 'active', 'closed')
         `;
 
         connection.query(query, [adminId, roomId], (err, result) => {
@@ -495,7 +495,7 @@ export const getRoomDetails = (roomId) => {
             // Ensure proper data format
             const formattedRoom = {
                 ...room,
-                status: room.status || 'waiting',
+                status: room.status || 'pending',
                 closed_at: room.closed_at || null,
                 customer_name: room.customer_name || 'Khách hàng',
                 total_messages: parseInt(room.total_messages) || 0
@@ -781,7 +781,7 @@ export const getOnlineAdmins = () => {
 //             const query = `
 //                 SELECT * FROM chat_rooms 
 //                 WHERE customer_id = ? 
-//                 AND status IN ('waiting', 'active', 'pending')
+//                 AND status IN ('pending', 'active', 'pending')
 //                 ORDER BY created_at DESC 
 //                 LIMIT 1
 //             `;
@@ -808,7 +808,7 @@ export const getCurrentCustomerRoom = async (customerId) => {
                 FROM chat_rooms cr
                 LEFT JOIN customers c ON cr.customer_id = c.customer_id
                 WHERE cr.customer_id = ? 
-                AND cr.status IN ('waiting', 'active', 'pending')
+                AND cr.status IN ('pending', 'active', 'closed')
                 ORDER BY cr.created_at DESC 
                 LIMIT 1
             `;
@@ -854,7 +854,7 @@ export const findOrCreateRoom = (customerId) => {
                 // Tạo room mới
                 const createQuery = `
                     INSERT INTO chat_rooms (customer_id, status, created_at) 
-                    VALUES (?, 'waiting', NOW())
+                    VALUES (?, 'pending', NOW())
                 `;
 
                 connection.query(createQuery, [customerId], (createErr, createResult) => {
@@ -972,7 +972,7 @@ export const getAllRooms = () => {
             const formattedRooms = results.map(room => ({
                 ...room,
                 is_online: Boolean(room.is_online),
-                status: room.status || 'waiting',
+                status: room.status || 'pending',
                 message_count: parseInt(room.message_count) || 0,
                 unread_count: 0 // Tính sau nếu cần
             }));
