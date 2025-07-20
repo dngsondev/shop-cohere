@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle, FaSpinner, FaClock } from 'react-icons/fa';
 import axios from 'axios';
+import { refreshCartQuantity } from '../../utils/cartUtils'; // Thêm dòng này
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function VnpayResult() {
     const location = useLocation();
@@ -9,6 +12,9 @@ function VnpayResult() {
     const [message, setMessage] = useState('Đang xác thực kết quả thanh toán...');
     const [status, setStatus] = useState('processing');
     const [orderId, setOrderId] = useState(null);
+
+    // Lấy customerId từ localStorage (hoặc nơi bạn lưu)
+    const customerId = JSON.parse(localStorage.getItem('customer'))?.customer_id;
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -24,63 +30,52 @@ function VnpayResult() {
             return;
         }
 
-        // Xử lý response từ VNPAY
         if (vnp_ResponseCode === '00') {
             setStatus('success');
             setMessage('Thanh toán thành công! Đang xử lý đơn hàng...');
-
-            // Gọi API callback để confirm đơn hàng
             handleVnpayCallback(orderId);
-
         } else if (vnp_ResponseCode && vnp_ResponseCode !== '00') {
             setStatus('failed');
             setMessage('Thanh toán không thành công hoặc đã bị hủy.');
-
-            // Xóa temp order nếu thanh toán thất bại
             handlePaymentFailure(orderId);
-
         } else if (statusParam === 'pending') {
             setStatus('pending');
             setMessage('Đơn hàng đang chờ xác nhận thanh toán.');
         } else {
-            // Kiểm tra trạng thái từ backend
             checkOrderStatus(orderId);
         }
     }, [location.search]);
 
     const handleVnpayCallback = async (orderId) => {
         try {
-            // Lấy thông tin temp order từ sessionStorage
             const tempOrderDataStr = sessionStorage.getItem('tempOrderData');
             let tempOrderData = null;
-
             if (tempOrderDataStr) {
                 tempOrderData = JSON.parse(tempOrderDataStr);
             }
 
-            // Gọi API callback với full URL để server xử lý signature
-            const response = await axios.get(`http://localhost:5000/order/vnpay/callback${location.search}`);
+            const response = await axios.get(`${BACKEND_URL}/order/vnpay/callback${location.search}`);
 
             if (response.data.success) {
                 setMessage('Thanh toán thành công! Đơn hàng đã được xác nhận.');
-
-                // Xóa temp order data khỏi sessionStorage
                 sessionStorage.removeItem('tempOrderData');
                 sessionStorage.removeItem("orderData");
 
                 // Xóa sản phẩm khỏi giỏ hàng nếu có thông tin
                 if (tempOrderData && tempOrderData.cart_ids && tempOrderData.cart_ids.length > 0) {
                     try {
-                        await axios.post('http://localhost:5000/cart/remove-items', {
+                        await axios.post(`${BACKEND_URL}/cart/remove-items`, {
                             customer_id: tempOrderData.customer_id,
                             cart_ids: tempOrderData.cart_ids
                         });
-
-                        // Trigger refresh cart
-                        window.dispatchEvent(new CustomEvent('cartUpdated'));
+                        // Cập nhật lại số lượng giỏ hàng
+                        if (customerId) await refreshCartQuantity(customerId);
                     } catch (cartError) {
                         console.error("Error removing cart items:", cartError);
                     }
+                } else {
+                    // Nếu không có cart_ids vẫn refresh lại số lượng
+                    if (customerId) await refreshCartQuantity(customerId);
                 }
             } else {
                 setStatus('error');
@@ -94,46 +89,32 @@ function VnpayResult() {
     };
 
     const handlePaymentFailure = async (orderId) => {
-        try {
-            // Hủy temp order nếu thanh toán thất bại
-            await axios.post(`http://localhost:5000/order/cancel-temp/${orderId}`);
-
-            // Xóa temp order data
-            sessionStorage.removeItem('tempOrderData');
-        } catch (error) {
-            console.error("Error canceling temp order:", error);
-        }
+        await axios.post(`${BACKEND_URL}/order/cancel-temp/${orderId}`);
+        sessionStorage.removeItem('tempOrderData');
     };
 
     const checkOrderStatus = async (orderId) => {
-        try {
-            const res = await axios.get(`http://localhost:5000/order/status/${orderId}`, {
-                timeout: 10000
-            });
+        const res = await axios.get(`${BACKEND_URL}/order/status/${orderId}`, {
+            timeout: 10000
+        });
 
-            if (res.data?.success) {
-                if (res.data.payment_status === 'Đã thanh toán') {
-                    setStatus('success');
-                    setMessage('Thanh toán thành công! Cảm ơn bạn đã mua hàng.');
-                    sessionStorage.removeItem("orderData");
-
-                    // Trigger refresh cart
-                    window.dispatchEvent(new CustomEvent('cartUpdated'));
-                } else if (res.data.order_status === 'Chờ xác nhận') {
-                    setStatus('pending');
-                    setMessage('Đơn hàng đang chờ xác nhận thanh toán.');
-                } else {
-                    setStatus('processing');
-                    setMessage(`Đơn hàng đang được xử lý: ${res.data.order_status}`);
-                }
+        if (res.data?.success) {
+            if (res.data.payment_status === 'Đã thanh toán') {
+                setStatus('success');
+                setMessage('Thanh toán thành công! Cảm ơn bạn đã mua hàng.');
+                sessionStorage.removeItem("orderData");
+                // Cập nhật lại số lượng giỏ hàng
+                if (customerId) await refreshCartQuantity(customerId);
+            } else if (res.data.order_status === 'Chờ xác nhận') {
+                setStatus('pending');
+                setMessage('Đơn hàng đang chờ xác nhận thanh toán.');
             } else {
-                setStatus('error');
-                setMessage('Không thể xác định trạng thái đơn hàng.');
+                setStatus('processing');
+                setMessage(`Đơn hàng đang được xử lý: ${res.data.order_status}`);
             }
-        } catch (err) {
-            console.error("Lỗi kiểm tra trạng thái đơn hàng:", err);
+        } else {
             setStatus('error');
-            setMessage('Lỗi khi kiểm tra trạng thái đơn hàng.');
+            setMessage('Không thể xác định trạng thái đơn hàng.');
         }
     };
 

@@ -214,115 +214,122 @@ export const createOrder = (orderData, voucher_id, payment_date, payment_status)
         }
 
         // Bắt đầu transaction để đảm bảo tính nhất quán
-        connection.beginTransaction((transactionErr) => {
-            if (transactionErr) {
-                console.error("Transaction error:", transactionErr);
-                return reject(transactionErr);
-            }
+        connection.getConnection((err, conn) => {
+            if (err) return reject(err);
 
-            // 1. Chèn đơn hàng vào bảng `orders`
-            const orderQuery = `
-                INSERT INTO orders (
-                    customer_id,
-                    delivery_infor_id,
-                    total_price,    
-                    voucher_id,
-                    created_at,
-                    order_status,
-                    payment_method,
-                    payment_status,
-                    note
-                ) VALUES (?, ?, ?, ?, NOW(), 'Chờ xác nhận', ?, ?, ?);
-            `;
-
-            connection.query(orderQuery, [
-                customer_id,
-                delivery_id || null,
-                total_amount,
-                voucher_id || null,
-                payment_method,
-                payment_status || 'Chưa thanh toán',
-                note || null
-            ], (err, orderResult) => {
-                if (err) {
-                    console.error("Lỗi khi tạo đơn hàng:", err);
-                    return connection.rollback(() => {
-                        reject(err);
-                    });
+            conn.beginTransaction((transactionErr) => {
+                if (transactionErr) {
+                    conn.release();
+                    console.error("Transaction error:", transactionErr);
+                    return reject(transactionErr);
                 }
 
-                const orderId = orderResult.insertId;
-                console.log(`✅ Created order with ID ${orderId}`);
-
-                // 2. Chèn chi tiết đơn hàng vào bảng `order_details`
-                const orderDetailQuery = `
-                    INSERT INTO order_details (order_id, product_id, variant_id, quantity, price) 
-                    VALUES ?
+                // 1. Chèn đơn hàng vào bảng `orders`
+                const orderQuery = `
+                    INSERT INTO orders (
+                        customer_id,
+                        delivery_infor_id,
+                        total_price,    
+                        voucher_id,
+                        created_at,
+                        order_status,
+                        payment_method,
+                        payment_status,
+                        note
+                    ) VALUES (?, ?, ?, ?, NOW(), 'Chờ xác nhận', ?, ?, ?);
                 `;
-                const orderDetails = items.map(item => [
-                    orderId,
-                    item.productId,
-                    item.variantId,
-                    item.quantity,
-                    item.priceQuotation
-                ]);
 
-                connection.query(orderDetailQuery, [orderDetails], (detailErr, orderDetailResult) => {
-                    if (detailErr) {
-                        console.error("Lỗi khi thêm chi tiết đơn hàng:", detailErr);
-                        return connection.rollback(() => {
-                            reject(detailErr);
+                conn.query(orderQuery, [
+                    customer_id,
+                    delivery_id || null,
+                    total_amount,
+                    voucher_id || null,
+                    payment_method,
+                    payment_status || 'Chưa thanh toán',
+                    note || null
+                ], (err, orderResult) => {
+                    if (err) {
+                        console.error("Lỗi khi tạo đơn hàng:", err);
+                        return conn.rollback(() => {
+                            conn.release();
+                            reject(err);
                         });
                     }
 
-                    console.log(`✅ Created order details for order ${orderId}`);
+                    const orderId = orderResult.insertId;
+                    console.log(`✅ Created order with ID ${orderId}`);
 
-                    // 3. Cập nhật số lượng sản phẩm
-                    const updateQuantityPromises = items.map(item => {
-                        return new Promise((resolveUpdate, rejectUpdate) => {
-                            const updateQuery = `
-                                UPDATE product_variants 
-                                SET quantity = quantity - ? 
-                                WHERE variant_id = ? AND quantity >= ?
-                            `;
+                    // 2. Chèn chi tiết đơn hàng vào bảng `order_details`
+                    const orderDetailQuery = `
+                        INSERT INTO order_details (order_id, product_id, variant_id, quantity, price) 
+                        VALUES ?
+                    `;
+                    const orderDetails = items.map(item => [
+                        orderId,
+                        item.productId,
+                        item.variantId,
+                        item.quantity,
+                        item.priceQuotation
+                    ]);
 
-                            connection.query(updateQuery, [item.quantity, item.variantId, item.quantity], (updateErr, updateResult) => {
-                                if (updateErr) {
-                                    console.error(`Error updating variant ${item.variantId}:`, updateErr);
-                                    return rejectUpdate(updateErr);
-                                }
+                    conn.query(orderDetailQuery, [orderDetails], (detailErr, orderDetailResult) => {
+                        if (detailErr) {
+                            console.error("Lỗi khi thêm chi tiết đơn hàng:", detailErr);
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(detailErr);
+                            });
+                        }
 
-                                if (updateResult.affectedRows === 0) {
-                                    return rejectUpdate(new Error(`Không đủ số lượng cho variant ${item.variantId}`));
-                                }
+                        console.log(`✅ Created order details for order ${orderId}`);
 
-                                console.log(`✅ Updated quantity for variant ${item.variantId}: -${item.quantity}`);
-                                resolveUpdate();
+                        // 3. Cập nhật số lượng sản phẩm
+                        const updateQuantityPromises = items.map(item => {
+                            return new Promise((resolveUpdate, rejectUpdate) => {
+                                const updateQuery = `
+                                    UPDATE product_variants 
+                                    SET quantity = quantity - ? 
+                                    WHERE variant_id = ? AND quantity >= ?
+                                `;
+
+                                conn.query(updateQuery, [item.quantity, item.variantId, item.quantity], (updateErr, updateResult) => {
+                                    if (updateErr) {
+                                        console.error(`Error updating variant ${item.variantId}:`, updateErr);
+                                        return rejectUpdate(updateErr);
+                                    }
+
+                                    if (updateResult.affectedRows === 0) {
+                                        return rejectUpdate(new Error(`Không đủ số lượng cho variant ${item.variantId}`));
+                                    }
+
+                                    console.log(`✅ Updated quantity for variant ${item.variantId}: -${item.quantity}`);
+                                    resolveUpdate();
+                                });
                             });
                         });
+
+                        Promise.all(updateQuantityPromises)
+                            .then(() => {
+                                // Commit transaction nếu tất cả đều thành công
+                                conn.commit((commitErr) => {
+                                    conn.release();
+                                    if (commitErr) {
+                                        console.error("Commit error:", commitErr);
+                                        return reject(commitErr);
+                                    }
+
+                                    console.log(`✅ Order ${orderId} created successfully with quantity updates`);
+                                    resolve(orderId);
+                                });
+                            })
+                            .catch((quantityErr) => {
+                                console.error("Error updating quantities:", quantityErr);
+                                conn.rollback(() => {
+                                    conn.release();
+                                    reject(quantityErr);
+                                });
+                            });
                     });
-
-                    Promise.all(updateQuantityPromises)
-                        .then(() => {
-                            // Commit transaction nếu tất cả đều thành công
-                            connection.commit((commitErr) => {
-                                if (commitErr) {
-                                    console.error("Commit error:", commitErr);
-                                    return connection.rollback(() => {
-                                        reject(commitErr);
-                                    });
-                                }
-
-                                console.log(`✅ Order ${orderId} created successfully with quantity updates`);
-                                resolve(orderId);
-                            });
-                        })
-                        .catch((quantityErr) => {
-                            console.error("Error updating quantities:", quantityErr);
-                            connection.rollback(() => {
-                                reject(quantityErr);
-                            });
-                        });
                 });
             });
         });
@@ -403,93 +410,202 @@ export const getOrderDetailFull = (orderId) => {
 };
 
 // Tạo đơn hàng tạm thời cho VNPAY (chưa thanh toán)
+// export const createTempOrder = (orderData, voucher_id = null) => {
+//     return new Promise((resolve, reject) => {
+//         connection.beginTransaction((err) => {
+//             if (err) {
+//                 console.error('Error starting transaction:', err);
+//                 return reject(err);
+//             }
+
+//             try {
+//                 // 1. Tạo đơn hàng với trạng thái "Chờ thanh toán"
+//                 const orderQuery = `
+//                     INSERT INTO orders (
+//                         customer_id, delivery_infor_id, payment_method, 
+//                         total_price, order_status, payment_status, note, 
+//                         voucher_id, created_at
+//                     ) VALUES (?, ?, ?, ?, 'Chờ xác nhận', 'Chưa thanh toán', ?, ?, NOW())
+//                 `;
+
+//                 connection.query(orderQuery, [
+//                     orderData.customer_id,
+//                     orderData.delivery_id || null,
+//                     orderData.payment_method,
+//                     orderData.total_amount,
+//                     orderData.note || '',
+//                     voucher_id
+//                 ], (err, orderResult) => {
+//                     if (err) {
+//                         console.error('Error creating temp order:', err);
+//                         return connection.rollback(() => reject(err));
+//                     }
+
+//                     const orderId = orderResult.insertId;
+//                     console.log('Temp order created with ID:', orderId);
+
+//                     // 2. Thêm chi tiết đơn hàng
+//                     const orderDetailQueries = orderData.items.map(item => {
+//                         return new Promise((resolveItem, rejectItem) => {
+//                             const detailQuery = `
+//                                 INSERT INTO order_details (
+//                                     order_id, product_id, variant_id, quantity, price
+//                                 ) VALUES (?, ?, ?, ?, ?)
+//                             `;
+
+//                             connection.query(detailQuery, [
+//                                 orderId,
+//                                 item.productId,
+//                                 item.variantId,
+//                                 item.quantity,
+//                                 item.priceQuotation
+//                             ], (err, result) => {
+//                                 if (err) {
+//                                     console.error('Error creating order detail:', err);
+//                                     return rejectItem(err);
+//                                 }
+//                                 resolveItem(result);
+//                             });
+//                         });
+//                     });
+
+//                     // Thực hiện tất cả chi tiết đơn hàng
+//                     Promise.all(orderDetailQueries)
+//                         .then(() => {
+//                             // 3. Commit transaction
+//                             connection.commit((err) => {
+//                                 if (err) {
+//                                     console.error('Error committing temp order transaction:', err);
+//                                     return connection.rollback(() => reject(err));
+//                                 }
+
+//                                 console.log('Temp order transaction completed successfully');
+//                                 resolve({
+//                                     success: true,
+//                                     order_id: orderId,
+//                                     message: 'Tạo đơn hàng tạm thời thành công'
+//                                 });
+//                             });
+//                         })
+//                         .catch((err) => {
+//                             console.error('Error in order details:', err);
+//                             connection.rollback(() => reject(err));
+//                         });
+//                 });
+
+//             } catch (error) {
+//                 console.error('Unexpected error in createTempOrder:', error);
+//                 connection.rollback(() => reject(error));
+//             }
+//         });
+//     });
+// };
+
 export const createTempOrder = (orderData, voucher_id = null) => {
     return new Promise((resolve, reject) => {
-        connection.beginTransaction((err) => {
-            if (err) {
-                console.error('Error starting transaction:', err);
-                return reject(err);
-            }
+        connection.getConnection((err, conn) => {
+            if (err) return reject(err);
 
-            try {
-                // 1. Tạo đơn hàng với trạng thái "Chờ thanh toán"
-                const orderQuery = `
-                    INSERT INTO orders (
-                        customer_id, delivery_infor_id, payment_method, 
-                        total_price, order_status, payment_status, note, 
-                        voucher_id, created_at
-                    ) VALUES (?, ?, ?, ?, 'Chờ xác nhận', 'Chưa thanh toán', ?, ?, NOW())
-                `;
+            conn.beginTransaction((err) => {
+                if (err) {
+                    conn.release();
+                    console.error('Error starting transaction:', err);
+                    return reject(err);
+                }
 
-                connection.query(orderQuery, [
-                    orderData.customer_id,
-                    orderData.delivery_id || null,
-                    orderData.payment_method,
-                    orderData.total_amount,
-                    orderData.note || '',
-                    voucher_id
-                ], (err, orderResult) => {
-                    if (err) {
-                        console.error('Error creating temp order:', err);
-                        return connection.rollback(() => reject(err));
-                    }
+                try {
+                    // 1. Tạo đơn hàng với trạng thái "Chờ thanh toán"
+                    const orderQuery = `
+                        INSERT INTO orders (
+                            customer_id, delivery_infor_id, payment_method, 
+                            total_price, order_status, payment_status, note, 
+                            voucher_id, created_at
+                        ) VALUES (?, ?, ?, ?, 'Chờ xác nhận', 'Chưa thanh toán', ?, ?, NOW())
+                    `;
 
-                    const orderId = orderResult.insertId;
-                    console.log('Temp order created with ID:', orderId);
-
-                    // 2. Thêm chi tiết đơn hàng
-                    const orderDetailQueries = orderData.items.map(item => {
-                        return new Promise((resolveItem, rejectItem) => {
-                            const detailQuery = `
-                                INSERT INTO order_details (
-                                    order_id, product_id, variant_id, quantity, price
-                                ) VALUES (?, ?, ?, ?, ?)
-                            `;
-
-                            connection.query(detailQuery, [
-                                orderId,
-                                item.productId,
-                                item.variantId,
-                                item.quantity,
-                                item.priceQuotation
-                            ], (err, result) => {
-                                if (err) {
-                                    console.error('Error creating order detail:', err);
-                                    return rejectItem(err);
-                                }
-                                resolveItem(result);
+                    conn.query(orderQuery, [
+                        orderData.customer_id,
+                        orderData.delivery_id || null,
+                        orderData.payment_method,
+                        orderData.total_amount,
+                        orderData.note || '',
+                        voucher_id
+                    ], (err, orderResult) => {
+                        if (err) {
+                            console.error('Error creating temp order:', err);
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(err);
                             });
-                        });
-                    });
+                        }
 
-                    // Thực hiện tất cả chi tiết đơn hàng
-                    Promise.all(orderDetailQueries)
-                        .then(() => {
-                            // 3. Commit transaction
-                            connection.commit((err) => {
-                                if (err) {
-                                    console.error('Error committing temp order transaction:', err);
-                                    return connection.rollback(() => reject(err));
-                                }
+                        const orderId = orderResult.insertId;
+                        console.log('Temp order created with ID:', orderId);
 
-                                console.log('Temp order transaction completed successfully');
-                                resolve({
-                                    success: true,
-                                    order_id: orderId,
-                                    message: 'Tạo đơn hàng tạm thời thành công'
+                        // 2. Thêm chi tiết đơn hàng
+                        const orderDetailQueries = orderData.items.map(item => {
+                            return new Promise((resolveItem, rejectItem) => {
+                                const detailQuery = `
+                                    INSERT INTO order_details (
+                                        order_id, product_id, variant_id, quantity, price
+                                    ) VALUES (?, ?, ?, ?, ?)
+                                `;
+
+                                conn.query(detailQuery, [
+                                    orderId,
+                                    item.productId,
+                                    item.variantId,
+                                    item.quantity,
+                                    item.priceQuotation
+                                ], (err, result) => {
+                                    if (err) {
+                                        console.error('Error creating order detail:', err);
+                                        return rejectItem(err);
+                                    }
+                                    resolveItem(result);
                                 });
                             });
-                        })
-                        .catch((err) => {
-                            console.error('Error in order details:', err);
-                            connection.rollback(() => reject(err));
                         });
-                });
 
-            } catch (error) {
-                console.error('Unexpected error in createTempOrder:', error);
-                connection.rollback(() => reject(error));
-            }
+                        // Thực hiện tất cả chi tiết đơn hàng
+                        Promise.all(orderDetailQueries)
+                            .then(() => {
+                                // 3. Commit transaction
+                                conn.commit((err) => {
+                                    if (err) {
+                                        console.error('Error committing temp order transaction:', err);
+                                        return conn.rollback(() => {
+                                            conn.release();
+                                            reject(err);
+                                        });
+                                    }
+
+                                    console.log('Temp order transaction completed successfully');
+                                    conn.release();
+                                    resolve({
+                                        success: true,
+                                        order_id: orderId,
+                                        message: 'Tạo đơn hàng tạm thời thành công'
+                                    });
+                                });
+                            })
+                            .catch((err) => {
+                                console.error('Error in order details:', err);
+                                conn.rollback(() => {
+                                    conn.release();
+                                    reject(err);
+                                });
+                            });
+                    });
+
+                } catch (error) {
+                    console.error('Unexpected error in createTempOrder:', error);
+                    conn.rollback(() => {
+                        conn.release();
+                        reject(error);
+                    });
+                }
+            });
         });
     });
 };
@@ -497,127 +613,104 @@ export const createTempOrder = (orderData, voucher_id = null) => {
 // Cập nhật trạng thái đơn hàng sau khi thanh toán thành công
 export const updateOrderAfterPayment = (orderId, paymentStatus = 'Đã thanh toán') => {
     return new Promise((resolve, reject) => {
-        console.log(`🔥 Starting updateOrderAfterPayment for order ${orderId} with status ${paymentStatus}`);
+        connection.getConnection((err, conn) => {
+            if (err) return reject(err);
 
-        connection.beginTransaction((err) => {
-            if (err) {
-                console.error('🔥 Error starting transaction:', err);
-                return reject(err);
-            }
+            conn.beginTransaction((err) => {
+                if (err) {
+                    conn.release();
+                    return reject(err);
+                }
 
-            try {
-                // 1. Cập nhật trạng thái thanh toán và đơn hàng
-                const updateOrderQuery = `
-                    UPDATE orders 
-                    SET payment_status = ?, 
-                        order_status = 'Đã xác nhận', 
-                        payment_date = NOW(),
-                        updated_at = NOW()
-                    WHERE order_id = ?
-                `;
-
-                console.log(`🔥 Executing update query for order ${orderId}`);
-                connection.query(updateOrderQuery, [paymentStatus, orderId], (err, result) => {
-                    if (err) {
-                        console.error('🔥 Error updating order payment status:', err);
-                        return connection.rollback(() => reject(err));
-                    }
-
-                    console.log(`🔥 Update order result:`, result);
-
-                    if (result.affectedRows === 0) {
-                        console.error(`🔥 No rows affected for order ${orderId}`);
-                        return connection.rollback(() => reject(new Error('Không tìm thấy đơn hàng để cập nhật')));
-                    }
-
-                    // 2. Lấy thông tin sản phẩm trong đơn hàng để trừ kho
-                    const getOrderItemsQuery = `
-                        SELECT od.variant_id, od.quantity 
-                        FROM order_details od 
-                        WHERE od.order_id = ?
+                try {
+                    const updateOrderQuery = `
+                        UPDATE orders 
+                        SET payment_status = ?, 
+                            order_status = 'Đã xác nhận', 
+                            payment_date = NOW(),
+                            updated_at = NOW()
+                        WHERE order_id = ?
                     `;
-
-                    console.log(`🔥 Getting order items for order ${orderId}`);
-                    connection.query(getOrderItemsQuery, [orderId], (err, orderItems) => {
+                    conn.query(updateOrderQuery, [paymentStatus, orderId], (err, result) => {
                         if (err) {
-                            console.error('🔥 Error getting order items:', err);
-                            return connection.rollback(() => reject(err));
-                        }
-
-                        console.log(`🔥 Found ${orderItems.length} items in order ${orderId}:`, orderItems);
-
-                        if (orderItems.length === 0) {
-                            // Không có items, chỉ commit transaction
-                            connection.commit((err) => {
-                                if (err) {
-                                    console.error('🔥 Error committing transaction (no items):', err);
-                                    return connection.rollback(() => reject(err));
-                                }
-
-                                console.log('🔥 Order updated successfully (no items to update inventory)');
-                                resolve({
-                                    success: true,
-                                    message: 'Cập nhật trạng thái đơn hàng thành công',
-                                    orderId: orderId
-                                });
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(err);
                             });
-                            return;
                         }
-
-                        // 3. Cập nhật số lượng kho cho từng variant
-                        const updateInventoryQueries = orderItems.map(item => {
-                            return new Promise((resolveUpdate, rejectUpdate) => {
-                                const updateInventoryQuery = `
-                                    UPDATE product_variants 
-                                    SET quantity = GREATEST(0, quantity - ?) 
-                                    WHERE variant_id = ?
-                                `;
-
-                                connection.query(updateInventoryQuery, [
-                                    item.quantity,
-                                    item.variant_id
-                                ], (err, result) => {
-                                    if (err) {
-                                        console.error('🔥 Error updating inventory:', err);
-                                        return rejectUpdate(err);
-                                    }
-
-                                    console.log(`🔥 Updated inventory for variant ${item.variant_id}: -${item.quantity}, affected rows: ${result.affectedRows}`);
-                                    resolveUpdate();
-                                });
+                        if (result.affectedRows === 0) {
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(new Error('Không tìm thấy đơn hàng để cập nhật'));
                             });
-                        });
-
-                        // Thực hiện tất cả cập nhật kho
-                        Promise.all(updateInventoryQueries)
-                            .then(() => {
-                                // 4. Commit transaction
-                                connection.commit((err) => {
-                                    if (err) {
-                                        console.error('🔥 Error committing transaction:', err);
-                                        return connection.rollback(() => reject(err));
-                                    }
-
-                                    console.log('🔥 Transaction completed successfully for order', orderId);
+                        }
+                        const getOrderItemsQuery = `
+                            SELECT od.variant_id, od.quantity 
+                            FROM order_details od 
+                            WHERE od.order_id = ?
+                        `;
+                        conn.query(getOrderItemsQuery, [orderId], (err, orderItems) => {
+                            if (err) {
+                                return conn.rollback(() => {
+                                    conn.release();
+                                    reject(err);
+                                });
+                            }
+                            if (orderItems.length === 0) {
+                                return conn.commit((err) => {
+                                    conn.release();
+                                    if (err) return reject(err);
                                     resolve({
                                         success: true,
-                                        message: 'Cập nhật trạng thái thanh toán và trừ kho thành công',
-                                        orderId: orderId,
-                                        updatedItems: orderItems.length
+                                        message: 'Cập nhật trạng thái đơn hàng thành công',
+                                        orderId: orderId
                                     });
                                 });
-                            })
-                            .catch((err) => {
-                                console.error('🔥 Error updating inventory:', err);
-                                connection.rollback(() => reject(err));
+                            }
+                            const updateInventoryQueries = orderItems.map(item => {
+                                return new Promise((resolveUpdate, rejectUpdate) => {
+                                    const updateInventoryQuery = `
+                                        UPDATE product_variants 
+                                        SET quantity = GREATEST(0, quantity - ?) 
+                                        WHERE variant_id = ?
+                                    `;
+                                    conn.query(updateInventoryQuery, [
+                                        item.quantity,
+                                        item.variant_id
+                                    ], (err, result) => {
+                                        if (err) return rejectUpdate(err);
+                                        resolveUpdate();
+                                    });
+                                });
                             });
+                            Promise.all(updateInventoryQueries)
+                                .then(() => {
+                                    conn.commit((err) => {
+                                        conn.release();
+                                        if (err) return reject(err);
+                                        resolve({
+                                            success: true,
+                                            message: 'Cập nhật trạng thái thanh toán và trừ kho thành công',
+                                            orderId: orderId,
+                                            updatedItems: orderItems.length
+                                        });
+                                    });
+                                })
+                                .catch((err) => {
+                                    conn.rollback(() => {
+                                        conn.release();
+                                        reject(err);
+                                    });
+                                });
+                        });
                     });
-                });
-
-            } catch (error) {
-                console.error('🔥 Unexpected error in updateOrderAfterPayment:', error);
-                connection.rollback(() => reject(error));
-            }
+                } catch (error) {
+                    conn.rollback(() => {
+                        conn.release();
+                        reject(error);
+                    });
+                }
+            });
         });
     });
 };
@@ -625,89 +718,88 @@ export const updateOrderAfterPayment = (orderId, paymentStatus = 'Đã thanh to�
 // Hủy đơn hàng tạm thời (xóa đơn hàng chưa thanh toán)
 export const cancelTempOrder = (orderId) => {
     return new Promise((resolve, reject) => {
-        connection.beginTransaction((err) => {
-            if (err) {
-                console.error('Error starting cancel transaction:', err);
-                return reject(err);
-            }
+        connection.getConnection((err, conn) => {
+            if (err) return reject(err);
 
-            try {
-                // 1. Kiểm tra trạng thái đơn hàng trước khi hủy
-                const checkOrderQuery = `
-                    SELECT order_id, payment_status, order_status 
-                    FROM orders 
-                    WHERE order_id = ?
-                `;
+            conn.beginTransaction((err) => {
+                if (err) {
+                    conn.release();
+                    return reject(err);
+                }
 
-                connection.query(checkOrderQuery, [orderId], (err, orderResult) => {
-                    if (err) {
-                        console.error('Error checking order status:', err);
-                        return connection.rollback(() => reject(err));
-                    }
-
-                    if (orderResult.length === 0) {
-                        return connection.rollback(() => reject(new Error('Không tìm thấy đơn hàng')));
-                    }
-
-                    const order = orderResult[0];
-
-                    // Chỉ cho phép hủy đơn hàng chưa thanh toán
-                    if (order.payment_status === 'Đã thanh toán') {
-                        return connection.rollback(() => reject(new Error('Không thể hủy đơn hàng đã thanh toán')));
-                    }
-
-                    // 2. Xóa chi tiết đơn hàng trước
-                    const deleteOrderDetailsQuery = `
-                        DELETE FROM order_details 
+                try {
+                    const checkOrderQuery = `
+                        SELECT order_id, payment_status, order_status 
+                        FROM orders 
                         WHERE order_id = ?
                     `;
-
-                    connection.query(deleteOrderDetailsQuery, [orderId], (err, detailResult) => {
+                    conn.query(checkOrderQuery, [orderId], (err, orderResult) => {
                         if (err) {
-                            console.error('Error deleting order details:', err);
-                            return connection.rollback(() => reject(err));
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(err);
+                            });
                         }
-
-                        console.log(`Deleted ${detailResult.affectedRows} order details for order ${orderId}`);
-
-                        // 3. Xóa đơn hàng
-                        const deleteOrderQuery = `
-                            DELETE FROM orders 
+                        if (orderResult.length === 0) {
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(new Error('Không tìm thấy đơn hàng'));
+                            });
+                        }
+                        const order = orderResult[0];
+                        if (order.payment_status === 'Đã thanh toán') {
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(new Error('Không thể hủy đơn hàng đã thanh toán'));
+                            });
+                        }
+                        const deleteOrderDetailsQuery = `
+                            DELETE FROM order_details 
                             WHERE order_id = ?
                         `;
-
-                        connection.query(deleteOrderQuery, [orderId], (err, orderDeleteResult) => {
+                        conn.query(deleteOrderDetailsQuery, [orderId], (err, detailResult) => {
                             if (err) {
-                                console.error('Error deleting order:', err);
-                                return connection.rollback(() => reject(err));
+                                return conn.rollback(() => {
+                                    conn.release();
+                                    reject(err);
+                                });
                             }
-
-                            if (orderDeleteResult.affectedRows === 0) {
-                                return connection.rollback(() => reject(new Error('Không thể xóa đơn hàng')));
-                            }
-
-                            // 4. Commit transaction
-                            connection.commit((err) => {
+                            const deleteOrderQuery = `
+                                DELETE FROM orders 
+                                WHERE order_id = ?
+                            `;
+                            conn.query(deleteOrderQuery, [orderId], (err, orderDeleteResult) => {
                                 if (err) {
-                                    console.error('Error committing cancel transaction:', err);
-                                    return connection.rollback(() => reject(err));
+                                    return conn.rollback(() => {
+                                        conn.release();
+                                        reject(err);
+                                    });
                                 }
-
-                                console.log(`Successfully cancelled temp order ${orderId}`);
-                                resolve({
-                                    success: true,
-                                    message: 'Hủy đơn hàng tạm thời thành công',
-                                    orderId: orderId
+                                if (orderDeleteResult.affectedRows === 0) {
+                                    return conn.rollback(() => {
+                                        conn.release();
+                                        reject(new Error('Không thể xóa đơn hàng'));
+                                    });
+                                }
+                                conn.commit((err) => {
+                                    conn.release();
+                                    if (err) return reject(err);
+                                    resolve({
+                                        success: true,
+                                        message: 'Hủy đơn hàng tạm thời thành công',
+                                        orderId: orderId
+                                    });
                                 });
                             });
                         });
                     });
-                });
-
-            } catch (error) {
-                console.error('Unexpected error in cancelTempOrder:', error);
-                connection.rollback(() => reject(error));
-            }
+                } catch (error) {
+                    conn.rollback(() => {
+                        conn.release();
+                        reject(error);
+                    });
+                }
+            });
         });
     });
 };
@@ -715,112 +807,108 @@ export const cancelTempOrder = (orderId) => {
 // Thêm hàm xác nhận đơn hàng sau thanh toán
 export const confirmOrderAfterPayment = (orderId, confirmData) => {
     return new Promise((resolve, reject) => {
-        connection.beginTransaction((err) => {
-            if (err) {
-                console.error('Error starting confirm transaction:', err);
-                return reject(err);
-            }
+        connection.getConnection((err, conn) => {
+            if (err) return reject(err);
 
-            try {
-                // 1. Cập nhật trạng thái đơn hàng
-                const updateOrderQuery = `
-                    UPDATE orders 
-                    SET payment_status = 'Đã thanh toán',
-                        order_status = 'Đã xác nhận',
-                        payment_date = NOW(),
-                        transaction_id = ?,
-                        updated_at = NOW()
-                    WHERE order_id = ? AND payment_status != 'Đã thanh toán'
-                `;
+            conn.beginTransaction((err) => {
+                if (err) {
+                    conn.release();
+                    return reject(err);
+                }
 
-                connection.query(updateOrderQuery, [
-                    confirmData.transaction_id || null,
-                    orderId
-                ], (err, result) => {
-                    if (err) {
-                        console.error('Error confirming order:', err);
-                        return connection.rollback(() => reject(err));
-                    }
-
-                    if (result.affectedRows === 0) {
-                        return connection.rollback(() => reject(new Error('Đơn hàng đã được xác nhận hoặc không tồn tại')));
-                    }
-
-                    // 2. Lấy danh sách sản phẩm để trừ kho
-                    const getOrderItemsQuery = `
-                        SELECT od.variant_id, od.quantity 
-                        FROM order_details od 
-                        WHERE od.order_id = ?
+                try {
+                    const updateOrderQuery = `
+                        UPDATE orders 
+                        SET payment_status = 'Đã thanh toán',
+                            order_status = 'Đã xác nhận',
+                            payment_date = NOW(),
+                            transaction_id = ?,
+                            updated_at = NOW()
+                        WHERE order_id = ? AND payment_status != 'Đã thanh toán'
                     `;
-
-                    connection.query(getOrderItemsQuery, [orderId], (err, orderItems) => {
+                    conn.query(updateOrderQuery, [
+                        confirmData.transaction_id || null,
+                        orderId
+                    ], (err, result) => {
                         if (err) {
-                            console.error('Error getting order items for confirm:', err);
-                            return connection.rollback(() => reject(err));
-                        }
-
-                        if (orderItems.length === 0) {
-                            // Không có items, chỉ commit
-                            connection.commit((err) => {
-                                if (err) {
-                                    return connection.rollback(() => reject(err));
-                                }
-
-                                resolve({
-                                    success: true,
-                                    message: 'Xác nhận đơn hàng thành công',
-                                    orderId: orderId
-                                });
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(err);
                             });
-                            return;
                         }
-
-                        // 3. Trừ kho sản phẩm
-                        const updateInventoryQueries = orderItems.map(item => {
-                            return new Promise((resolveUpdate, rejectUpdate) => {
-                                const updateInventoryQuery = `
-                                    UPDATE product_variants 
-                                    SET quantity = GREATEST(0, quantity - ?) 
-                                    WHERE variant_id = ?
-                                `;
-
-                                connection.query(updateInventoryQuery, [
-                                    item.quantity,
-                                    item.variant_id
-                                ], (err, result) => {
-                                    if (err) {
-                                        return rejectUpdate(err);
-                                    }
-                                    resolveUpdate();
-                                });
+                        if (result.affectedRows === 0) {
+                            return conn.rollback(() => {
+                                conn.release();
+                                reject(new Error('Đơn hàng đã được xác nhận hoặc không tồn tại'));
                             });
-                        });
-
-                        Promise.all(updateInventoryQueries)
-                            .then(() => {
-                                connection.commit((err) => {
-                                    if (err) {
-                                        return connection.rollback(() => reject(err));
-                                    }
-
+                        }
+                        const getOrderItemsQuery = `
+                            SELECT od.variant_id, od.quantity 
+                            FROM order_details od 
+                            WHERE od.order_id = ?
+                        `;
+                        conn.query(getOrderItemsQuery, [orderId], (err, orderItems) => {
+                            if (err) {
+                                return conn.rollback(() => {
+                                    conn.release();
+                                    reject(err);
+                                });
+                            }
+                            if (orderItems.length === 0) {
+                                return conn.commit((err) => {
+                                    conn.release();
+                                    if (err) return reject(err);
                                     resolve({
                                         success: true,
-                                        message: 'Xác nhận đơn hàng và cập nhật kho thành công',
-                                        orderId: orderId,
-                                        updatedItems: orderItems.length
+                                        message: 'Xác nhận đơn hàng thành công',
+                                        orderId: orderId
                                     });
                                 });
-                            })
-                            .catch((err) => {
-                                connection.rollback(() => reject(err));
+                            }
+                            const updateInventoryQueries = orderItems.map(item => {
+                                return new Promise((resolveUpdate, rejectUpdate) => {
+                                    const updateInventoryQuery = `
+                                        UPDATE product_variants 
+                                        SET quantity = GREATEST(0, quantity - ?) 
+                                        WHERE variant_id = ?
+                                    `;
+                                    conn.query(updateInventoryQuery, [
+                                        item.quantity,
+                                        item.variant_id
+                                    ], (err, result) => {
+                                        if (err) return rejectUpdate(err);
+                                        resolveUpdate();
+                                    });
+                                });
                             });
+                            Promise.all(updateInventoryQueries)
+                                .then(() => {
+                                    conn.commit((err) => {
+                                        conn.release();
+                                        if (err) return reject(err);
+                                        resolve({
+                                            success: true,
+                                            message: 'Xác nhận đơn hàng và cập nhật kho thành công',
+                                            orderId: orderId,
+                                            updatedItems: orderItems.length
+                                        });
+                                    });
+                                })
+                                .catch((err) => {
+                                    conn.rollback(() => {
+                                        conn.release();
+                                        reject(err);
+                                    });
+                                });
+                        });
                     });
-                });
-
-            } catch (error) {
-                console.error('Unexpected error in confirmOrderAfterPayment:', error);
-                connection.rollback(() => reject(error));
-            }
+                } catch (error) {
+                    conn.rollback(() => {
+                        conn.release();
+                        reject(error);
+                    });
+                }
+            });
         });
     });
 };

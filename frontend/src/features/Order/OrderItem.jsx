@@ -15,6 +15,8 @@ import { useToast } from '../../components/Toast/Toast';
 import orderService from '../../services/orderService';
 import cartService from '../../services/cartService';
 
+import { refreshCartQuantity } from '../../utils/cartUtils';
+
 Modal.setAppElement('#root');
 
 function OrderItem() {
@@ -223,6 +225,10 @@ function OrderItem() {
                 const response = await orderService.createOrder(orderRequestData);
                 if (response.data.success) {
                     await removeOrderedItemsFromCart();
+                    // Cập nhật lại số lượng giỏ hàng sau khi đặt hàng thành công
+                    if (customer?.customer_id || customer?.id) {
+                        await refreshCartQuantity(customer.customer_id || customer.id);
+                    }
                     setModalIsOpen(false);
                     navigate('/profile/orders');
                 } else {
