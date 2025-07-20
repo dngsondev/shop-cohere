@@ -1144,11 +1144,11 @@ export const getProductsByCategory = (categoryId, excludeProductId) => {
     const query = `
       SELECT 
         p.product_id,
-        p.product_name,
-        p.description,
-        p.discount,
-        pi.product_image_url,
-        pv.price
+        MIN(p.product_name) AS product_name,
+        MIN(p.description) AS description,
+        MIN(p.discount) AS discount,
+        MIN(pi.product_image_url) AS product_image_url,
+        MIN(pv.price) AS price
       FROM products p
       LEFT JOIN product_variants pv ON p.product_id = pv.product_id
       LEFT JOIN product_images pi ON p.product_id = pi.product_id
