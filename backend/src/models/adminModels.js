@@ -35,7 +35,6 @@ export const getAllUsersModel = () => {
                 c.birth_year as birthYear,
                 c.provider,
                 c.provider_id,
-                c.token,
                 c.created_at,
                 COALESCE(c.status, 1) as status,
                 GROUP_CONCAT(DISTINCT di.phone ORDER BY di.delivery_infor_id SEPARATOR ', ') as phones
@@ -1620,9 +1619,9 @@ export const getTopProductsByMonth = (month, year, limit = 10) => {
         (MIN(pv.price) * (1 - p.discount / 100)) AS final_price,
         IFNULL(s.total_sold, 0) AS total_sold,
         IFNULL(s.total_revenue, 0) AS total_revenue,
-        COALESCE(r.average_rating, 0) AS average_rating,
-        COALESCE(r.review_count, 0) AS review_count,
-        IFNULL(stock.total_stock, 0) AS total_stock
+        COALESCE(MIN(r.average_rating), 0) AS average_rating,
+        COALESCE(MIN(r.review_count), 0) AS review_count,
+        IFNULL(MIN(stock.total_stock), 0) AS total_stock
       FROM products p
       LEFT JOIN (
         SELECT 

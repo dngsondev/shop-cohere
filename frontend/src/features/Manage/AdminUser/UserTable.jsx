@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { getFullImageUrl } from '../../../utils/imageUtils';
+
 function UserTable({ users, loading, onView, onEdit, onDelete, onToggleStatus }) {
     if (loading) {
         return (
@@ -86,7 +88,7 @@ function UserTable({ users, loading, onView, onEdit, onDelete, onToggleStatus })
                                             {user.avatar ? (
                                                 <img
                                                     className="h-10 w-10 rounded-full"
-                                                    src={user.avatar}
+                                                    src={getFullImageUrl(user.avatar)}
                                                     alt={user.fullname}
                                                 />
                                             ) : (

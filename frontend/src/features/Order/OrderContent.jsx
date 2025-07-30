@@ -371,7 +371,7 @@ const OrderContent = ({
                                     ) : (
                                         <>
                                             <FaShieldAlt />
-                                            <span>Thanh toán an toàn</span>
+                                            <span>Thanh toán</span>
                                         </>
                                     )}
                                 </button>

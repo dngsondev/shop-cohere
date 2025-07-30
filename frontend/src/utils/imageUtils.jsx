@@ -1,5 +1,5 @@
 export const getFullImageUrl = (imagePath) => {
-    if (!imagePath) return '/images/avatar/avatar-default.png';
+    if (!imagePath) return '/images/avatar/avt_default.png';
 
     // Nếu là URL đầy đủ (Google, Facebook, ...)
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {

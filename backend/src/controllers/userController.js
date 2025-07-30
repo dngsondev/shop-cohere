@@ -25,6 +25,28 @@ import { saveAvatarFromBase64, deleteOldAvatar, validateAvatarBase64 } from '../
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
+// Helper function để xử lý avatar path consistently
+const processAvatarPath = (avatarPath) => {
+  console.log("Processing avatar path:", avatarPath); // Debug log
+
+  if (!avatarPath || avatarPath === null || avatarPath === '') {
+    return "/images/avatar/avt_default.png";
+  }
+
+  // Nếu là relative path từ uploads, thêm / vào đầu
+  if (avatarPath.startsWith('uploads/')) {
+    return `/${avatarPath}`;
+  }
+
+  // Nếu đã có dấu / ở đầu hoặc là full URL, giữ nguyên
+  if (avatarPath.startsWith('/') || avatarPath.startsWith('http')) {
+    return avatarPath;
+  }
+
+  // Trường hợp khác, thêm / vào đầu
+  return `/${avatarPath}`;
+};
+
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -41,22 +63,25 @@ export const loginUser = async (req, res, next) => {
     console.log("Kết quả đăng nhập:", { success: result.success, role: result.user?.role });
 
     if (result.success) {
-      // Chuẩn hóa dữ liệu trả về để tránh lỗi null
+      // ✅ Sử dụng helper function
+      const processedAvatar = processAvatarPath(result.user.avatar);
+      console.log("Login - Processed avatar:", processedAvatar);
+
       const responseData = {
         success: true,
         message: "Đăng nhập thành công",
         user: {
           ...result.user,
-          avatar: result.user.avatar || "/images/default-avatar.png"
+          avatar: processedAvatar
         }
       };
 
       // SỬA: Nếu là admin (role = 0 hoặc 1) thì thêm token và redirect info
       if (result.user?.role === 0 || result.user?.role === 1) {
         responseData.token = result.token;
-        responseData.redirectTo = '/admin'; // Thêm thông tin redirect
+        responseData.redirectTo = '/admin';
       } else {
-        responseData.redirectTo = '/'; // Customer redirect về trang chủ
+        responseData.redirectTo = '/';
       }
 
       return res.status(200).json(responseData);
@@ -271,11 +296,15 @@ export const getLastestUserController = async (req, res) => {
     const result = await getLastestUser(userId);
 
     if (result.success) {
+      // ✅ Sử dụng helper function
+      const processedAvatar = processAvatarPath(result.user.avatar);
+      console.log("Latest user - Processed avatar:", processedAvatar);
+
       res.status(200).json({
         success: true,
         user: {
           ...result.user,
-          avatar: result.user.avatar || "/images/avatar/avt_default.png"
+          avatar: processedAvatar
         }
       });
     } else {
@@ -427,10 +456,17 @@ export const updateUserController = async (req, res) => {
         deleteOldAvatar(oldAvatarPath);
       }
 
+      // ✅ Sử dụng helper function
+      const processedAvatar = processAvatarPath(result.user.avatar);
+      console.log("Update user - Processed avatar:", processedAvatar);
+
       res.status(200).json({
         success: true,
         message: result.message,
-        user: result.user
+        user: {
+          ...result.user,
+          avatar: processedAvatar
+        }
       });
     } else {
       // Nếu cập nhật thất bại, xóa avatar mới đã lưu
@@ -445,6 +481,50 @@ export const updateUserController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống: " + error.message
+    });
+  }
+};
+
+// ✅ Thêm endpoint riêng cho cart để debug
+export const getUserForCart = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log("Getting user info for CART, user ID:", userId);
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
+
+    const result = await getLastestUser(userId);
+
+    if (result.success) {
+      const processedAvatar = processAvatarPath(result.user.avatar);
+      console.log("Cart - Processed avatar:", processedAvatar);
+
+      res.status(200).json({
+        success: true,
+        user: {
+          customer_id: result.user.customer_id,
+          username: result.user.username,
+          email: result.user.email,
+          fullname: result.user.fullname,
+          avatar: processedAvatar
+        }
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: result.message || "Không tìm thấy người dùng"
+      });
+    }
+  } catch (error) {
+    console.error("Error getting user info for cart:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi hệ thống: " + error.message

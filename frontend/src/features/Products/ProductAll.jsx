@@ -157,36 +157,36 @@ function ProductAll() {
         <div className="w-full">
             {/* Navbar với Dropdown - Responsive */}
             <div className="w-full bg-white py-4 rounded-xl shadow mb-8 pt-2 border border-gray-100">
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-center md:gap-6 mb-4 px-1">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-center sm:items-stretch md:gap-6 mb-4 px-1">
                     {/* Dropdown - Thể loại */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0">
-                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700">Thể loại:</label>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0 h-full sm:h-12">
+                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700 sm:min-w-fit sm:leading-8">Thể loại:</label>
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="select-animated pl-2 pr-6 py-1 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50"
+                            className="select-animated pl-2 pr-6 py-2 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50 h-8 leading-none"
                         >
                             {categories.map(category => <option key={category} value={category}>{category}</option>)}
                         </select>
                     </div>
                     {/* Dropdown - Thương hiệu */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0">
-                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700">Thương hiệu:</label>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0 h-full sm:h-12">
+                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700 sm:min-w-fit sm:leading-8">Thương hiệu:</label>
                         <select
                             value={selectedBrand}
                             onChange={(e) => setSelectedBrand(e.target.value)}
-                            className="select-animated pl-2 pr-6 py-1 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50"
+                            className="select-animated pl-2 pr-6 py-2 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50 h-8 leading-none"
                         >
                             {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
                         </select>
                     </div>
                     {/* Dropdown - Giá */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0">
-                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700">Giá:</label>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0 h-full sm:h-12">
+                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700 sm:min-w-fit sm:leading-8">Giá:</label>
                         <select
                             value={selectedPrice}
                             onChange={(e) => setSelectedPrice(e.target.value)}
-                            className="select-animated pl-2 pr-6 py-1 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50"
+                            className="select-animated pl-2 pr-6 py-2 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50 h-8 leading-none"
                         >
                             <option value="Tất cả">Tất cả</option>
                             <option value="Dưới 500k">Dưới 500k</option>
@@ -195,12 +195,12 @@ function ProductAll() {
                         </select>
                     </div>
                     {/* Dropdown - Chất liệu */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0">
-                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700">Chất liệu:</label>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center min-w-0 h-full sm:h-12">
+                        <label className="font-medium mr-1 mb-1 sm:mb-0 text-xs whitespace-nowrap text-gray-700 sm:min-w-fit sm:leading-8">Chất liệu:</label>
                         <select
                             value={selectedMaterial}
                             onChange={(e) => setSelectedMaterial(e.target.value)}
-                            className="select-animated pl-2 pr-6 py-1 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50"
+                            className="select-animated pl-2 pr-6 py-2 rounded border border-gray-300 cursor-pointer focus:outline-none w-full sm:w-auto text-xs bg-gray-50 h-8 leading-none"
                         >
                             {materials.map(material => <option key={material} value={material}>{material}</option>)}
                         </select>

@@ -30,79 +30,6 @@ export const createChatRoom = async (customerId) => {
 };
 
 // Lấy hoặc tạo phòng chat
-// export const getOrCreateRoom = async (customerId) => {
-//     return new Promise((resolve, reject) => {
-//         try {
-//             // Tìm room đang active của customer này trước - CẢI THIỆN ĐIỀU KIỆN
-//             const findActiveRoomQuery = `
-//                 SELECT * FROM chat_rooms 
-//                 WHERE customer_id = ? 
-//                 AND status IN ('pending', 'active', 'pending')
-//                 ORDER BY created_at DESC 
-//                 LIMIT 1
-//             `;
-
-//             connection.query(findActiveRoomQuery, [customerId], (err, results) => {
-//                 if (err) {
-//                     console.error('Error finding active room:', err);
-//                     return reject(err);
-//                 }
-
-//                 // Nếu đã có room active, trả về room đó
-//                 if (results.length > 0) {
-//                     const existingRoom = results[0];
-//                     console.log(`✅ Found existing active room: ${existingRoom.room_id} for customer: ${customerId}`);
-
-//                     // Cập nhật last_message_at để đánh dấu room vừa được sử dụng
-//                     const updateLastActivityQuery = `
-//                         UPDATE chat_rooms 
-//                         SET last_message_at = NOW()
-//                         WHERE room_id = ?
-//                     `;
-
-//                     connection.query(updateLastActivityQuery, [existingRoom.room_id], (updateErr) => {
-//                         if (updateErr) {
-//                             console.error('Error updating room activity:', updateErr);
-//                         }
-//                     });
-
-//                     return resolve(existingRoom);
-//                 }
-
-//                 // Nếu chưa có room active, tạo mới
-//                 console.log(`🆕 Creating new room for customer: ${customerId}`);
-//                 const createRoomQuery = `
-//                     INSERT INTO chat_rooms (customer_id, status, created_at, last_message_at) 
-//                     VALUES (?, 'pending', NOW(), NOW())
-//                 `;
-
-//                 connection.query(createRoomQuery, [customerId], (err, result) => {
-//                     if (err) {
-//                         console.error('Error creating chat room:', err);
-//                         return reject(err);
-//                     }
-
-//                     const newRoomId = result.insertId;
-//                     console.log(`✅ Created new room: ${newRoomId} for customer: ${customerId}`);
-
-//                     // Lấy thông tin room vừa tạo
-//                     const getRoomQuery = `SELECT * FROM chat_rooms WHERE room_id = ?`;
-//                     connection.query(getRoomQuery, [newRoomId], (err, roomResults) => {
-//                         if (err) {
-//                             console.error('Error fetching new room:', err);
-//                             return reject(err);
-//                         }
-
-//                         resolve(roomResults[0]);
-//                     });
-//                 });
-//             });
-//         } catch (error) {
-//             console.error('Error in getOrCreateRoom:', error);
-//             reject(new Error('Không thể lấy hoặc tạo phòng chat: ' + error.message));
-//         }
-//     });
-// };
 export const getOrCreateRoom = async (customerId) => {
     return new Promise((resolve, reject) => {
         try {
@@ -290,8 +217,7 @@ export const getRoomMessages = (roomId) => {
                 sender_name: msg.sender_name || 'Unknown',
                 sender_avatar: msg.sender_avatar,
                 message: msg.message,
-                // is_read: msg.is_read || false,
-                created_at: msg.created_at, // Đảm bảo format đúng
+                created_at: msg.created_at,
                 formatted_time: new Date(msg.created_at).toISOString()
             }));
 
@@ -361,14 +287,13 @@ export const insertMessage = (roomId, senderType, senderId, message) => {
                 insertedMessage.formatted_time = insertedMessage.created_at;
 
                 console.log('✅ Message inserted successfully:', {
-                    id: insertedMessage.id,
+                    id: insertedMessage.message_id,
                     room_id: insertedMessage.room_id,
                     sender_type: insertedMessage.sender_type,
                     sender_id: insertedMessage.sender_id,
                     sender_name: insertedMessage.sender_name,
                     sender_avatar: insertedMessage.sender_avatar,
                     message: insertedMessage.message,
-                    is_read: insertedMessage.is_read,
                     created_at: insertedMessage.created_at,
                     formatted_time: insertedMessage.formatted_time
                 });
@@ -384,7 +309,7 @@ export const assignRoomToAdmin = (roomId, adminId) => {
     return new Promise((resolve, reject) => {
         const query = `
             UPDATE chat_rooms 
-            SET admin_id = ?, status = 'active', assigned_at = NOW()
+            SET admin_id = ?, status = 'active'
             WHERE room_id = ? AND status IN ('pending', 'closed')
         `;
 
@@ -413,11 +338,11 @@ export const closeRoom = (roomId, adminId) => {
     return new Promise((resolve, reject) => {
         const query = `
             UPDATE chat_rooms 
-            SET status = 'closed', closed_at = NOW(), closed_by = ?
+            SET status = 'closed', closed_at = NOW()
             WHERE room_id = ? AND status IN ('pending', 'active', 'closed')
         `;
 
-        connection.query(query, [adminId, roomId], (err, result) => {
+        connection.query(query, [roomId], (err, result) => {
             if (err) {
                 console.error('Error closing room:', err);
                 return reject(err);
@@ -430,34 +355,6 @@ export const closeRoom = (roomId, adminId) => {
             console.log(`✅ Room ${roomId} closed by admin ${adminId}`);
             resolve(result);
         });
-    });
-};
-
-// Đánh dấu tin nhắn đã đọc
-export const markMessagesAsRead = (roomId, readerType) => {
-    return new Promise((resolve, reject) => {
-        try {
-            const query = `
-                UPDATE chat_messages 
-                SET is_read = 1 
-                WHERE room_id = ? AND sender_type != ? AND is_read = 0
-            `;
-
-            connection.query(query, [roomId, readerType], (err, result) => {
-                if (err) {
-                    console.error('Error marking messages as read:', err);
-                    return reject(new Error('Lỗi khi đánh dấu tin nhắn đã đọc: ' + err.message));
-                }
-
-                resolve({
-                    success: true,
-                    updatedCount: result.affectedRows
-                });
-            });
-        } catch (error) {
-            console.error('Error marking messages as read:', error);
-            reject(new Error('Lỗi khi đánh dấu tin nhắn đã đọc: ' + error.message));
-        }
     });
 };
 
@@ -571,10 +468,7 @@ export const getCustomerStatus = (customerId) => {
                 c.email,
                 c.customer_username as username,
                 c.avatar,
-                c.created_at as joined_date,
-                'offline' as status,
-                NULL as last_seen,
-                FALSE as is_typing
+                c.created_at as joined_date
             FROM customers c
             WHERE c.customer_id = ?
         `;
@@ -600,114 +494,15 @@ export const getCustomerStatus = (customerId) => {
             }
 
             const customer = results[0];
-            console.log('✅ Customer status:', customer);
-            resolve(customer);
-        });
-    });
-};
+            const customerStatus = {
+                ...customer,
+                status: 'offline', // Mặc định offline
+                last_seen: null,
+                is_typing: false
+            };
 
-// Cleanup inactive sessions - THÊM FUNCTION NÀY
-export const cleanupInactiveSessions = () => {
-    return new Promise((resolve, reject) => {
-        try {
-            const query = `
-                UPDATE user_sessions 
-                SET is_online = FALSE 
-                WHERE last_activity < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-                AND is_online = TRUE
-            `;
-
-            connection.query(query, [], (err, result) => {
-                if (err) {
-                    console.error('Error cleaning up sessions:', err);
-                    return reject(err);
-                }
-
-                if (result.affectedRows > 0) {
-                    console.log(`🧹 Cleaned up ${result.affectedRows} inactive user sessions`);
-                }
-                resolve({ cleanedUp: result.affectedRows });
-            });
-        } catch (error) {
-            console.error('Error cleaning up sessions:', error);
-            reject(error);
-        }
-    });
-};
-
-// User session management
-export const updateUserSession = (userId, userType, isOnline = true) => {
-    return new Promise((resolve, reject) => {
-        // Kiểm tra xem bảng user_sessions có tồn tại không
-        const checkTableQuery = `SHOW TABLES LIKE 'user_sessions'`;
-
-        connection.query(checkTableQuery, [], (err, results) => {
-            if (err || results.length === 0) {
-                // Nếu bảng không tồn tại, chỉ resolve mà không làm gì
-                console.log('Table user_sessions does not exist, skipping session update');
-                return resolve({ success: true, skipped: true });
-            }
-
-            const query = `
-                INSERT INTO user_sessions (user_id, user_type, is_online, last_activity)
-                VALUES (?, ?, ?, NOW())
-                ON DUPLICATE KEY UPDATE 
-                    is_online = VALUES(is_online),
-                    last_activity = NOW()
-            `;
-
-            connection.query(query, [userId, userType, isOnline], (err) => {
-                if (err) {
-                    console.error('Error updating user session:', err);
-                    return resolve({ success: true, error: err.message }); // Không reject để tránh crash
-                }
-
-                resolve({ success: true });
-            });
-        });
-    });
-};
-
-// Lấy trạng thái user
-export const getUserStatus = (userId, userType) => {
-    return new Promise((resolve, reject) => {
-        // Kiểm tra bảng tồn tại
-        const checkTableQuery = `SHOW TABLES LIKE 'user_sessions'`;
-
-        connection.query(checkTableQuery, [], (err, results) => {
-            if (err || results.length === 0) {
-                return resolve({ isOnline: false, lastSeen: null });
-            }
-
-            const query = `
-                SELECT is_online, last_activity
-                FROM user_sessions
-                WHERE user_id = ? AND user_type = ?
-                ORDER BY last_activity DESC
-                LIMIT 1
-            `;
-
-            connection.query(query, [userId, userType], (err, result) => {
-                if (err) {
-                    console.error('Error getting user status:', err);
-                    return resolve({ isOnline: false, lastSeen: null });
-                }
-
-                if (result.length === 0) {
-                    return resolve({ isOnline: false, lastSeen: null });
-                }
-
-                const session = result[0];
-                const now = new Date();
-                const lastActivity = new Date(session.last_activity);
-                const diffMinutes = (now - lastActivity) / (1000 * 60);
-                const isOnline = session.is_online && diffMinutes < 5;
-
-                resolve({
-                    isOnline,
-                    lastSeen: session.last_activity
-                });
-            });
+            console.log('✅ Customer status:', customerStatus);
+            resolve(customerStatus);
         });
     });
 };
@@ -742,7 +537,7 @@ export const getAdminInfo = (adminId) => {
     });
 };
 
-// Lấy danh sách admin online (có thể mở rộng sau)
+// Lấy danh sách admin online
 export const getOnlineAdmins = () => {
     return new Promise((resolve, reject) => {
         const query = `
@@ -752,7 +547,7 @@ export const getOnlineAdmins = () => {
                 admin_username as username,
                 role
             FROM admins 
-            WHERE role IN (1, 2)
+            WHERE role IN (0, 1) AND status = 1
             ORDER BY admin_name
         `;
 
@@ -762,7 +557,7 @@ export const getOnlineAdmins = () => {
                 return reject(err);
             }
 
-            // Tất cả admin được coi là online (có thể cải thiện sau với WebSocket)
+            // Tất cả admin được coi là online
             const onlineAdmins = results.map(admin => ({
                 ...admin,
                 isOnline: true,
@@ -775,31 +570,6 @@ export const getOnlineAdmins = () => {
 };
 
 // Kiểm tra room hiện tại của customer
-// export const getCurrentCustomerRoom = async (customerId) => {
-//     return new Promise((resolve, reject) => {
-//         try {
-//             const query = `
-//                 SELECT * FROM chat_rooms 
-//                 WHERE customer_id = ? 
-//                 AND status IN ('pending', 'active', 'pending')
-//                 ORDER BY created_at DESC 
-//                 LIMIT 1
-//             `;
-
-//             connection.query(query, [customerId], (err, results) => {
-//                 if (err) {
-//                     console.error('Error checking current room:', err);
-//                     return reject(err);
-//                 }
-
-//                 resolve(results.length > 0 ? results[0] : null);
-//             });
-//         } catch (error) {
-//             console.error('Error in getCurrentCustomerRoom:', error);
-//             reject(error);
-//         }
-//     });
-// };
 export const getCurrentCustomerRoom = async (customerId) => {
     return new Promise((resolve, reject) => {
         try {
@@ -833,9 +603,11 @@ export const findOrCreateRoom = (customerId) => {
     return new Promise((resolve, reject) => {
         // Tìm room hiện tại của customer (chưa đóng)
         const findQuery = `
-            SELECT * FROM chat_rooms 
-            WHERE customer_id = ? AND status != 'closed' 
-            ORDER BY created_at DESC 
+            SELECT cr.*, c.customer_fullname, c.customer_username, c.email, c.avatar
+            FROM chat_rooms cr
+            LEFT JOIN customers c ON cr.customer_id = c.customer_id
+            WHERE cr.customer_id = ? AND cr.status != 'closed' 
+            ORDER BY cr.created_at DESC 
             LIMIT 1
         `;
 
@@ -889,110 +661,14 @@ export const findOrCreateRoom = (customerId) => {
     });
 };
 
-// Thêm hàm kiểm tra user online từ user_sessions
-export const checkUserOnlineStatus = (userId, userType = 'customer') => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT 
-                us.*,
-                CASE 
-                    WHEN us.last_activity >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                    ELSE 0
-                END as is_online,
-                TIMESTAMPDIFF(MINUTE, us.last_activity, NOW()) as minutes_offline
-            FROM user_sessions us
-            WHERE us.user_id = ? AND us.user_type = ?
-            ORDER BY us.last_activity DESC
-            LIMIT 1
-        `;
-
-        connection.query(query, [userId, userType], (err, results) => {
-            if (err) {
-                console.error('❌ Error checking online status:', err);
-                return reject(err);
-            }
-
-            if (results.length > 0) {
-                const session = results[0];
-                resolve({
-                    isOnline: Boolean(session.is_online),
-                    lastActivity: session.last_activity,
-                    minutesOffline: session.minutes_offline || 0,
-                    sessionToken: session.session_token,
-                    ipAddress: session.ip_address,
-                    userAgent: session.user_agent
-                });
-            } else {
-                resolve({
-                    isOnline: false,
-                    lastActivity: null,
-                    minutesOffline: null,
-                    sessionToken: null,
-                    ipAddress: null,
-                    userAgent: null
-                });
-            }
-        });
-    });
-};
-
-// Cập nhật hàm getAllRooms để bao gồm thông tin online
-export const getAllRooms = () => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT 
-                cr.*,
-                c.customer_fullname as customer_name,
-                c.customer_username,
-                c.email as customer_email,
-                c.avatar as customer_avatar,
-                a.admin_name,
-                a.admin_username,
-                (SELECT COUNT(*) FROM chat_messages WHERE room_id = cr.room_id) as message_count,
-                (SELECT message FROM chat_messages WHERE room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message,
-                us.last_activity,
-                CASE 
-                    WHEN us.last_activity >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                    ELSE 0
-                END as is_online,
-                TIMESTAMPDIFF(MINUTE, us.last_activity, NOW()) as minutes_offline
-            FROM chat_rooms cr
-            LEFT JOIN customers c ON cr.customer_id = c.customer_id
-            LEFT JOIN admins a ON cr.admin_id = a.admin_id  
-            LEFT JOIN user_sessions us ON c.customer_id = us.user_id AND us.user_type = 'customer'
-            ORDER BY cr.created_at DESC
-        `;
-
-        connection.query(query, (err, results) => {
-            if (err) {
-                console.error('❌ Error getting rooms:', err);
-                return reject(err);
-            }
-
-            const formattedRooms = results.map(room => ({
-                ...room,
-                is_online: Boolean(room.is_online),
-                status: room.status || 'pending',
-                message_count: parseInt(room.message_count) || 0,
-                unread_count: 0 // Tính sau nếu cần
-            }));
-
-            console.log(`✅ Retrieved ${formattedRooms.length} rooms with online status`);
-            resolve(formattedRooms);
-        });
-    });
-};
-
-// Thêm function này vào cuối file
+// Cập nhật trạng thái room
 export const updateRoomStatus = (roomId, status) => {
     return new Promise((resolve, reject) => {
         const query = `
             UPDATE chat_rooms 
             SET status = ?, 
-                last_message_at = NOW(),
-                ${status === 'active' ? 'assigned_at = NOW(),' : ''}
-                ${status === 'closed' ? 'closed_at = NOW(),' : ''}
-                updated_at = NOW()
+                last_message_at = NOW()
+                ${status === 'closed' ? ', closed_at = NOW()' : ''}
             WHERE room_id = ?
         `;
 

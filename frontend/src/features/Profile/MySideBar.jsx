@@ -13,7 +13,7 @@ const menu = [
             { label: 'Hồ sơ', to: '/profile', icon: FaUser },
             { label: 'Địa chỉ', to: '/profile/address', icon: FaMapMarkerAlt },
             { label: 'Đổi mật khẩu', to: '/profile/password', icon: FaLock },
-            { label: 'Thiết lập riêng tư', to: '/profile/privacy', icon: FaShieldAlt },
+            // { label: 'Thiết lập riêng tư', to: '/profile/privacy', icon: FaShieldAlt },
         ]
     },
     { label: 'Đơn đã mua', to: '/profile/orders', icon: FaShoppingBag },

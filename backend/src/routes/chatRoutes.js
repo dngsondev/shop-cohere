@@ -10,9 +10,9 @@ const router = express.Router();
 // Customer routes
 router.post('/room', chatController.createOrGetRoom);
 router.get('/messages/:roomId', chatController.getMessages);
-router.post('/message', chatController.sendMessage); // ✅ Route này OK
+router.post('/message', chatController.sendMessage);
 router.post('/activity', chatController.updateActivity);
-router.put('/room/:roomId/status', chatController.updateRoomStatus); // ✅ Thêm route này
+router.put('/room/:roomId/status', chatController.updateRoomStatus);
 router.get('/online-status/:userId/:userType', chatController.getOnlineStatus);
 
 // Admin routes

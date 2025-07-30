@@ -17,15 +17,9 @@ export const createOrGetRoom = async (req, res) => {
         // Tìm hoặc tạo room
         const room = await chatModels.findOrCreateRoom(customerId);
 
-        // Kiểm tra trạng thái online của customer
-        const onlineStatus = await chatModels.checkUserOnlineStatus(customerId, 'customer');
-
         res.json({
             success: true,
-            room: {
-                ...room,
-                online_status: onlineStatus
-            },
+            room: room,
             message: room.room_id ? 'Room found' : 'Room created'
         });
 
@@ -52,13 +46,11 @@ export const getChatRooms = async (req, res) => {
                 customer_name: room.customer_name || room.customer_username,
                 customer_email: room.customer_email,
                 admin_id: room.admin_id,
-                staff_name: room.staff_name,
+                staff_name: room.admin_name,
                 status: room.status,
                 last_message: room.last_message,
                 last_message_at: room.last_message_at,
                 unread_count: room.unread_count || 0,
-                customer_online: room.customer_online || false,
-                customer_last_seen: room.customer_last_seen,
                 created_at: room.created_at,
                 closed_at: room.closed_at
             }))
@@ -108,7 +100,7 @@ export const getMessages = async (req, res) => {
     }
 };
 
-// Sửa lại function sendMessage
+// Gửi tin nhắn
 export const sendMessage = async (req, res) => {
     try {
         const { roomId, senderType, senderId, message } = req.body;
@@ -147,26 +139,9 @@ export const sendMessage = async (req, res) => {
         // Insert message
         const newMessage = await chatModels.insertMessage(roomId, senderType, senderId, message.trim());
 
-        // Logic tự động cập nhật trạng thái room
-        let roomStatusUpdated = false;
-
-        // Nếu là customer gửi tin nhắn và room đang waiting, chuyển thành active
-        if (senderType === 'customer' && room.status === 'waiting') {
-            try {
-                await chatModels.updateRoomStatus(roomId, 'active');
-                roomStatusUpdated = true;
-                console.log(`🔄 Room ${roomId} status updated from waiting to active`);
-            } catch (statusError) {
-                console.error('❌ Error updating room status:', statusError);
-                // Không fail toàn bộ request nếu chỉ update status lỗi
-            }
-        }
-
         res.json({
             success: true,
-            message: newMessage,
-            room_status_updated: roomStatusUpdated,
-            new_room_status: roomStatusUpdated ? 'active' : room.status
+            message: newMessage
         });
 
     } catch (error) {
@@ -178,6 +153,7 @@ export const sendMessage = async (req, res) => {
     }
 };
 
+// Cập nhật trạng thái room
 export const updateRoomStatus = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -193,7 +169,7 @@ export const updateRoomStatus = async (req, res) => {
         console.log(`🔄 Updating room ${roomId} status to: ${status}`);
 
         // Validate status
-        const validStatuses = ['waiting', 'active', 'pending', 'closed'];
+        const validStatuses = ['pending', 'active', 'closed'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
@@ -234,7 +210,7 @@ export const updateRoomStatus = async (req, res) => {
     }
 };
 
-// Assign phòng chat cho admin - SỬA LẠI
+// Assign phòng chat cho admin
 export const assignRoom = async (req, res) => {
     try {
         const { roomId, adminId } = req.body;
@@ -269,7 +245,7 @@ export const assignRoom = async (req, res) => {
     }
 };
 
-// Đóng phòng chat - SỬA LẠI
+// Đóng phòng chat
 export const closeRoom = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -299,7 +275,7 @@ export const closeRoom = async (req, res) => {
     }
 };
 
-// Lấy danh sách admin - THÊM MỚI
+// Lấy danh sách admin
 export const getAdmins = async (req, res) => {
     try {
         const admins = await chatModels.getOnlineAdmins();
@@ -318,7 +294,7 @@ export const getAdmins = async (req, res) => {
     }
 };
 
-// Lấy trạng thái customer - SỬA LẠI
+// Lấy trạng thái customer
 export const getCustomerStatus = async (req, res) => {
     try {
         const { customerId } = req.params;
@@ -336,7 +312,7 @@ export const getCustomerStatus = async (req, res) => {
         res.json({
             success: true,
             status: {
-                isOnline: false, // Mặc định offline vì chưa có real-time tracking
+                isOnline: false, // Mặc định offline
                 lastSeen: null,
                 isTyping: false,
                 customer: {
@@ -359,7 +335,7 @@ export const getCustomerStatus = async (req, res) => {
     }
 };
 
-// Lấy trạng thái staff của phòng chat - SỬA LẠI
+// Lấy trạng thái staff của phòng chat
 export const getStaffStatus = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -380,7 +356,7 @@ export const getStaffStatus = async (req, res) => {
                 assignedTo: room.admin_name || null,
                 adminId: room.admin_id || null,
                 adminUsername: room.admin_username || null,
-                roomStatus: room.status || 'waiting'
+                roomStatus: room.status || 'pending'
             }
         });
     } catch (error) {
@@ -393,33 +369,12 @@ export const getStaffStatus = async (req, res) => {
     }
 };
 
-// Đánh dấu tin nhắn đã đọc
-export const markAsRead = async (req, res) => {
-    try {
-        const { roomId } = req.params;
-        const { readerType } = req.body;
-
-        await chatModels.markMessagesAsRead(roomId, readerType);
-
-        res.json({
-            success: true,
-            message: 'Đã đánh dấu tin nhắn đã đọc'
-        });
-    } catch (error) {
-        console.error('Error in markAsRead:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-// Update user activity
+// Update user activity - Giả lập để tương thích
 export const updateActivity = async (req, res) => {
     try {
         const { userId, userType } = req.body;
 
-        await chatModels.updateUserSession(userId, userType, true);
+        console.log(`📊 Activity updated for ${userType}: ${userId}`);
 
         res.json({
             success: true,
@@ -463,25 +418,19 @@ export const getCurrentRoom = async (req, res) => {
     }
 };
 
-// Cleanup task - chạy định kỳ
-setInterval(async () => {
-    try {
-        await chatModels.cleanupInactiveSessions();
-    } catch (error) {
-        console.error('Cleanup error:', error);
-    }
-}, 60000); // Chạy mỗi phút
-
-// Thêm endpoint để kiểm tra trạng thái online
+// Endpoint để kiểm tra trạng thái online - Giả lập
 export const getOnlineStatus = async (req, res) => {
     try {
         const { userId, userType } = req.params;
 
-        const onlineStatus = await chatModels.checkUserOnlineStatus(userId, userType);
-
+        // Trả về offline cho tất cả users vì không có bảng user_sessions
         res.json({
             success: true,
-            online_status: onlineStatus
+            online_status: {
+                isOnline: false,
+                lastActivity: null,
+                minutesOffline: null
+            }
         });
 
     } catch (error) {

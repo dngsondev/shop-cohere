@@ -5,6 +5,7 @@ import { getInforToSuggestQuestions } from '../models/cohereModels.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import striptags from 'striptags'; // Cài: npm install striptags
 
 // Bộ nhớ lưu hội thoại trước đó
 let chatHistory = [];
@@ -91,8 +92,6 @@ export const sendMessage = async (req, res) => {
         const fileContext = fileTexts.join("\n");
         console.log("File context:", fileContext);
 
-
-
         // Lấy thông tin sản phẩm từ MySQL
         const products = await getInforToCohere();
 
@@ -116,14 +115,59 @@ export const sendMessage = async (req, res) => {
             }
         }
 
+        console.log("Thông tin cá nhân hóa:", personalizedInfo);
+
+
         // Tạo thông tin sản phẩm dưới dạng chuỗi liền mạch
-        // const productInfo = products.map(product =>
-        //     Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
-        // ).join('\n');
-        const productInfo = (ratedProducts.length > 0 ? ratedProducts : products)
-            .map(product =>
-                Object.entries(product).map(([key, value]) => `${key}: ${value || 'Không có thông tin'}`).join(', ')
-            ).join('\n');
+        function groupProducts(products) {
+            const grouped = {};
+            products.forEach(p => {
+                const id = p.product_id;
+                if (!grouped[id]) {
+                    grouped[id] = {
+                        product_id: id,
+                        product_name: p.product_name,
+                        brand: p.brand,
+                        category: p.category,
+                        material: p.material,
+                        avg_rating: p.avg_rating,
+                        price: Number(p.price).toFixed(0),
+                        discount: Number(p.discount).toFixed(0),
+                        final_price: Number(p.final_price).toFixed(0),
+                        colors: new Set(),
+                        sizes: new Set(),
+                        description: striptags(p.description || '').replace(/\s+/g, ' ').trim().slice(0, 120) // rút gọn mô tả
+                    };
+                }
+                grouped[id].colors.add(p.color);
+                grouped[id].sizes.add(p.size);
+            });
+            // Chuyển set thành chuỗi
+            return Object.values(grouped).map(p => ({
+                ...p,
+                colors: Array.from(p.colors).join('/'),
+                sizes: Array.from(p.sizes).join('/')
+            }));
+        }
+
+        const groupedProducts = groupProducts(products);
+        const productInfo = groupedProducts.map(product =>
+            `product_id: ${product.product_id}, 
+            product_name: ${product.product_name}, 
+            brand: ${product.brand}, 
+            category: ${product.category}, 
+            material: ${product.material}, 
+            avg_rating: ${product.avg_rating || 'Không có'}, 
+            price: ${product.price}, 
+            discount: ${product.discount}, 
+            final_price: ${product.final_price}, 
+            colors: ${product.colors}, 
+            sizes: ${product.sizes}, 
+            description: ${product.description}`
+        ).join('\n');
+
+        console.log("Thông tin sản phẩm (tối ưu):", productInfo);
+        console.log("Số lượng kí tự (tối ưu):", productInfo.length);
 
         // Tạo prompt cho Cohere
         const prompt = `${command[0].contents}
@@ -152,14 +196,21 @@ ${productInfo}
 Lịch sử hội thoại:  
 ${conversationContext}
 
-Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC phải đánh dấu sản phẩm đó bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM> ... </PRODUCT|ID: ID_SẢN_PHẨM> đúng với ID trong dữ liệu. 
-Không được bỏ sót sản phẩm nào đã nhắc đến.
+Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC chỉ được đánh dấu tên sản phẩm bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM> ... </PRODUCT|ID: ID_SẢN_PHẨM> đúng với ID trong dữ liệu. 
+KHÔNG được tạo bất kỳ tag nào khác như <COLOR|...>, <COLORS>...</COLORS>, <SIZE|...>, <SIZES>...</SIZES>, <BRAND|...> hoặc các tag tương tự.
 Chỉ đánh dấu tag này cho tên sản phẩm, không được đánh dấu cho các thông tin khác như màu sắc, kích thước, chất liệu, v.v.
+Nếu khách hỏi về màu sắc, kích thước, chỉ trả lời dạng văn bản thông thường, KHÔNG dùng tag nào cả.
 Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả.
 
 Ví dụ đúng:
 Khách hỏi: "Bạn có áo khoác thông gió không?"
 Trả lời: "<PRODUCT|ID: 80>Áo khoác thông gió a.k.a. AIR-tech jacket AT.02</PRODUCT|ID: 80> là sản phẩm nổi bật với công nghệ AIR-tech™ độc quyền..."
+
+Ví dụ sai (KHÔNG ĐƯỢC dùng):
+- <COLORS>...</COLORS>
+- <SIZES>...</SIZES>
+- <COLOR|...>
+- <SIZE|...>
 
 Câu hỏi: ${message}  
 Trả lời:
@@ -340,3 +391,4 @@ Cách phối đồ layering như thế nào?`
 
     return suggestions[season] || suggestions.autumn;
 }
+
