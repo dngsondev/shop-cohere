@@ -56,6 +56,8 @@ function AdminChat() {
 
             const response = await chatService.getChatRooms();
 
+            console.log('📥 Loaded chat rooms:', response.data);
+
             if (response.data && response.data.success) {
                 const newRooms = response.data.rooms || [];
 
@@ -231,8 +233,8 @@ function AdminChat() {
     }
 
     // Get statistics for active rooms
-    const activeRoomsCount = rooms.filter(r => r.status === 'active').length;
-    const pendingRoomsCount = rooms.filter(r => r.status === 'pending' || r.status === 'waiting').length;
+    // const activeRoomsCount = rooms.filter(r => r.status === 'active').length;
+    // const pendingRoomsCount = rooms.filter(r => r.status === 'pending' || r.status === 'waiting').length;
 
     return (
         <div className={styles.adminChatContainer}>

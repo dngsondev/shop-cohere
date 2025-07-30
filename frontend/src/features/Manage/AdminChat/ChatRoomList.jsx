@@ -32,6 +32,7 @@ import {
     IoReload,
     IoReloadOutline
 } from 'react-icons/io5';
+import { getFullImageUrl } from '../../../utils/imageUtils';
 import styles from './ChatRoomList.module.scss';
 
 function ChatRoomList({ rooms, selectedRoom, onRoomSelect, error, onRefresh, loading }) {
@@ -273,7 +274,7 @@ function ChatRoomList({ rooms, selectedRoom, onRoomSelect, error, onRefresh, loa
                                         <div className={styles.avatarContainer}>
                                             {room.customer_avatar ? (
                                                 <img
-                                                    src={room.customer_avatar}
+                                                    src={getFullImageUrl(room.customer_avatar)}
                                                     alt={room.customer_name}
                                                     className={styles.avatar}
                                                 />

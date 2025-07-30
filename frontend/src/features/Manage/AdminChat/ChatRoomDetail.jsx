@@ -14,6 +14,7 @@ import {
 import { MdClose, MdAssignmentTurnedIn, MdInfo } from 'react-icons/md';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import chatService from '../../../services/chatService';
+import { getFullImageUrl } from '../../../utils/imageUtils';
 import styles from './ChatRoomDetail.module.scss';
 
 function ChatRoomDetail({ room, onRoomUpdate }) {
@@ -262,7 +263,7 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
                 <div className={styles.customerSection}>
                     <div className={styles.customerAvatar}>
                         {room.customer_avatar ? (
-                            <img src={room.customer_avatar} alt={room.customer_name} />
+                            <img src={getFullImageUrl(room.customer_avatar)} alt={room.customer_name} />
                         ) : (
                             <div className={styles.avatarPlaceholder}>
                                 {(room.customer_name || 'K').charAt(0).toUpperCase()}
@@ -402,7 +403,7 @@ function ChatRoomDetail({ room, onRoomUpdate }) {
                                                 {!isAdmin && isFirstInGroup && (
                                                     <div className={styles.senderAvatar}>
                                                         {room.customer_avatar ? (
-                                                            <img src={room.customer_avatar} alt="" />
+                                                            <img src={getFullImageUrl(room.customer_avatar)} alt="" />
                                                         ) : (
                                                             <div className={styles.avatarSmall}>
                                                                 {(room.customer_name || 'K').charAt(0).toUpperCase()

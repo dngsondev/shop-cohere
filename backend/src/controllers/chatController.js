@@ -45,6 +45,7 @@ export const getChatRooms = async (req, res) => {
                 customer_id: room.customer_id,
                 customer_name: room.customer_name || room.customer_username,
                 customer_email: room.customer_email,
+                customer_avatar: room.customer_avatar,
                 admin_id: room.admin_id,
                 staff_name: room.admin_name,
                 status: room.status,
