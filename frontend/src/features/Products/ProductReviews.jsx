@@ -13,6 +13,13 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
         setReviewList(reviews?.data || []);
     }, [reviews]);
 
+    console.log("ProductReviews - reviewList:", reviewList);
+
+    //log ảnh avt
+    useEffect(() => {
+        console.log("ProductReviews - reviewList images:", reviewList.map(r => r.avatar));
+    }, [reviewList]);
+
     // Xử lý dữ liệu
     const totalReviews = reviewList.length;
     const avgRating = totalReviews
@@ -295,16 +302,16 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
                     </div>
                 </div>
                 {/* Sắp xếp */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                     <button className="flex items-center px-3 py-1 border rounded bg-white text-gray-700">
                         Sắp xếp
                         <svg width="18" height="18" fill="none" className="ml-1"><path d="M6 9l3 3 3-3" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </button>
-                    {/* Placeholder cho filter icon */}
+                    
                     <button className="flex items-center px-2 py-1 border rounded bg-white text-gray-700">
                         <svg width="18" height="18" fill="none"><circle cx="9" cy="9" r="8" stroke="#374151" strokeWidth="2" /></svg>
                     </button>
-                </div>
+                </div> */}
             </div>
             {/* Bộ lọc sao */}
             <div className="flex flex-col md:flex-row gap-4 mt-6">
@@ -343,8 +350,12 @@ function ProductReviews({ reviews, colors, sizes, productId, variants }) {
                                 <div key={idx} className="bg-white rounded-xl p-5 shadow border border-gray-100 flex flex-col gap-2 relative group transition hover:shadow-lg">
                                     <div className="flex items-center gap-3">
                                         {/* Avatar (chữ cái đầu tên) */}
-                                        <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-white font-bold text-lg uppercase shadow">
-                                            {r.customer_fullname ? r.customer_fullname[0] : "?"}
+                                        <div >
+                                            <img
+                                                className="w-10 h-10 rounded-full"
+                                                src={getFullImageUrl(r.avatar)}
+                                                alt="lỗi ảnh"
+                                            />
                                         </div>
                                         <div className="flex flex-col">
                                             <div className="flex items-center gap-2">

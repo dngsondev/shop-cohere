@@ -26,6 +26,10 @@ export const getFullImageUrl = (imagePath) => {
         return imagePath;
     }
 
+    if (imagePath.startsWith('images/')) {
+        return `/${imagePath}`;
+    }
+
     // Trường hợp khác
     return imagePath;
 };

@@ -15,7 +15,7 @@ function ProductById() {
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [reviews, setReviews] = useState([]);
 
-    console.log("p:", product);
+    // console.log("p:", product);
 
 
     useEffect(() => {

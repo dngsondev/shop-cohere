@@ -1174,7 +1174,7 @@ export const getProductReviews = (id) => {
     const query = `
       SELECT 
         r.review_id, r.customer_id, r.product_id,
-        cus.customer_fullname,
+        cus.customer_fullname, cus.avatar,
         c.color_name, s.size_name, rating, comment, r.created_at,
         GROUP_CONCAT(pvr.url) AS media,
         MAX(rr.reply_id) IS NOT NULL AS replied,
