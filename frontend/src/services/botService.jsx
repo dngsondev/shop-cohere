@@ -12,7 +12,8 @@ const botService = {
         return axios.post(API_URL + '/sendMessage', {
             userId: data.userId,
             productId: data.productId,
-            messages: data.messages // chỉ gửi mảng messages
+            messages: data.messages,
+            excludedProductIds: data.excludedProductIds || [] // THÊM DÒNG NÀY
         });
     },
 
