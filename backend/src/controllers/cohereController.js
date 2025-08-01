@@ -64,7 +64,7 @@ async function createProductEmbedding(product) {
         const response = await cohere.embed({
             texts: [productText],
             model: 'embed-multilingual-v3.0',
-            input_type: 'search_document' // Thêm dòng này
+            input_type: 'search_document'
         });
         // console.log("Cohere response:", response);
 
@@ -87,8 +87,13 @@ async function searchRelevantProducts(query, allProducts, limit = 8) {
         const queryEmbeddingResponse = await cohere.embed({
             texts: [query],
             model: 'embed-multilingual-v3.0',
-            input_type: 'search_query' // Thêm dòng này
+            input_type: 'search_query'
         });
+
+        console.log(`🔍 Đã tạo embedding cho query: "${query}"`);
+        console.log("nội dung embedding:", queryEmbeddingResponse);
+
+
         const queryEmbedding = queryEmbeddingResponse.embeddings[0];
 
         // 2. Group products để tránh duplicate
@@ -99,6 +104,8 @@ async function searchRelevantProducts(query, allProducts, limit = 8) {
         const productSimilarities = [];
 
         for (const product of groupedProducts) {
+            // console.log("1:", product);
+
             let productEmbedding;
 
             // Kiểm tra cache
@@ -107,12 +114,16 @@ async function searchRelevantProducts(query, allProducts, limit = 8) {
             } else {
                 // Tạo embedding mới và cache
                 productEmbedding = await createProductEmbedding(product);
+                // console.log("2:", productEmbedding);
                 if (productEmbedding) {
                     productEmbeddingsCache.set(product.product_id, productEmbedding);
                 }
             }
 
             if (productEmbedding) {
+                // console.log("query:", queryEmbedding);
+                // console.log("product:", productEmbedding);
+
                 const similarity = cosineSimilarity(queryEmbedding, productEmbedding);
                 productSimilarities.push({
                     product,
@@ -252,7 +263,7 @@ export const sendMessage = async (req, res) => {
 
         // **THAY ĐỔI CHÍNH: Lấy tất cả sản phẩm một lần**
         const allProducts = await getInforToCohere();
-        console.log(`📊 Tổng số sản phẩm trong DB: ${allProducts.length}`);
+        // console.log(`📊 Tổng số sản phẩm trong DB: ${allProducts.length}`);
 
         // Nếu có userId và productId, có thể lấy thông tin cá nhân hóa
         let personalizedInfo = '';
@@ -276,6 +287,7 @@ export const sendMessage = async (req, res) => {
 
         if (message && message.trim().length > 0) {
             // Semantic search cho câu hỏi cụ thể
+            // so sanh message với tất cả sản phẩm để tìm sản phẩm liên quan tối đa 8 sản phẩm
             relevantProducts = await searchRelevantProducts(message, allProducts, 8);
 
             // Fallback nếu semantic search không tìm thấy gì
@@ -290,6 +302,8 @@ export const sendMessage = async (req, res) => {
                 .filter(p => p.avg_rating >= 4)
                 .slice(0, 8);
         }
+
+        console.log("Sản phẩm liên quan:", relevantProducts);
 
         // **Tạo productInfo từ sản phẩm liên quan thay vì tất cả**
         const productInfo = relevantProducts.map(product =>
@@ -306,9 +320,10 @@ export const sendMessage = async (req, res) => {
             sizes: ${product.sizes}, 
             description: ${product.description}`
         ).join('\n');
+        console.log("Sản phẩm liên quan (tối ưu):", productInfo);
 
-        console.log(`🎯 Sử dụng ${relevantProducts.length} sản phẩm liên quan thay vì ${allProducts.length} sản phẩm`);
-        console.log("📝 Số ký tự productInfo (tối ưu):", productInfo.length);
+        // console.log(`🎯 Sử dụng ${relevantProducts.length} sản phẩm liên quan thay vì ${allProducts.length} sản phẩm`);
+        // console.log("📝 Số ký tự productInfo (tối ưu):", productInfo.length);
 
         // Tạo prompt cho Cohere (giống như cũ)
         const prompt = `${command[0].contents}
@@ -356,8 +371,8 @@ Câu hỏi: ${message}
 Trả lời:
         `;
 
-        console.log("Prompt gửi đến Cohere (SendMessage):", prompt);
-        console.log("Prompt length:", prompt.length);
+        // console.log("Prompt gửi đến Cohere (SendMessage):", prompt);
+        // console.log("Prompt length:", prompt.length);
 
 
         // Gửi yêu cầu đến Cohere
