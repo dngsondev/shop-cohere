@@ -32,6 +32,7 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
     const [suggestionsLoading, setSuggestionsLoading] = useState(false); // Thêm state này
     const [isOnline, setIsOnline] = useState(true); // Trạng thái online của bot
     const [lastMentionedProductIds, setLastMentionedProductIds] = useState([]);
+    const [excludedProductIds, setExcludedProductIds] = useState([]); // THÊM DÒNG NÀY
 
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -173,6 +174,15 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
         }
     }, [messages]);
 
+    // Khi nhận được phản hồi từ bot, cập nhật excludedProductIds
+    useEffect(() => {
+        // Tìm tất cả product_id đã được bot trả về trong các messages trước đó
+        const allBotProducts = messages
+            .filter(msg => msg.sender === 'bot' && Array.isArray(msg.products) && msg.products.length > 0)
+            .flatMap(msg => msg.products.map(p => p.product_id));
+        setExcludedProductIds([...new Set(allBotProducts)]);
+    }, [messages]);
+
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
 
@@ -205,13 +215,14 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
             const last4Messages = updatedMessages.slice(-4).map(msg => ({
                 content: msg.content,
                 sender: msg.sender,
-                // timestamp: msg.timestamp
             }));
 
+            // GỬI excludedProductIds vào API
             const response = await botService.sendMessage({
                 messages: last4Messages,
                 userId: userId,
-                productId: productId
+                productId: productId,
+                excludedProductIds // THÊM DÒNG NÀY
             });
 
             // Xóa tin nhắn "đang suy nghĩ..."
@@ -222,7 +233,7 @@ function ChatBot({ setShowChat, chatType, setChatType, user, globalRoomId, onRoo
                     content: response.data.reply || 'Xin lỗi, tôi không hiểu câu hỏi của bạn.',
                     sender: 'bot',
                     timestamp: new Date().toISOString(),
-                    products: response.data.products || {}
+                    products: response.data.products || []
                 };
 
                 const finalMessages = [...messagesWithoutThinking, botResponse];

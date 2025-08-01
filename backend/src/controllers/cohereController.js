@@ -6,6 +6,10 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import striptags from 'striptags';
+<<<<<<< HEAD
+=======
+import Fuse from 'fuse.js';
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
 
 // Bộ nhớ lưu hội thoại trước đó
 let chatHistory = [];
@@ -22,6 +26,10 @@ async function convertFileToText(filePath) {
     if (ext === '.txt') {
         return fs.promises.readFile(filePath, 'utf8');
     }
+<<<<<<< HEAD
+=======
+    //mammoth:
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
     if (ext === '.docx') {
         try {
             const mammoth = await import('mammoth');
@@ -35,6 +43,7 @@ async function convertFileToText(filePath) {
     return '';
 }
 
+<<<<<<< HEAD
 // Hàm tính cosine similarity
 function cosineSimilarity(vecA, vecB) {
     if (vecA.length !== vecB.length) return 0;
@@ -199,76 +208,122 @@ function groupProducts(products) {
         colors: Array.from(p.colors).join('/'),
         sizes: Array.from(p.sizes).join('/')
     }));
+=======
+// Hàm lọc sản phẩm liên quan sử dụng Fuse.js
+function filterProductsByMessage(products, message, max = 5, excludedIds = []) {
+    if (!message) return products.filter(p => !excludedIds.includes(p.product_id)).slice(0, max);
+
+    // Làm sạch description trước khi truyền vào Fuse
+    const cleanedProducts = products
+        .filter(p => !excludedIds.includes(p.product_id))
+        .map(p => ({
+            ...p,
+            description: striptags(p.description || '').replace(/\s+/g, ' ').trim()
+        }));
+
+    // console.log("Filtered products: ", cleanedProducts);
+
+
+    const fuse = new Fuse(
+        cleanedProducts,
+        {
+            keys: [
+                'product_name',
+                'category',
+                'brand',
+                'material',
+                'color',
+                'size',
+                'description'
+            ],
+            threshold: 0.4,
+            ignoreLocation: true,
+            minMatchCharLength: 2
+        }
+    );
+
+    const results = fuse.search(message);
+    const filtered = results.slice(0, max).map(r => r.item);
+
+    if (filtered.length < max) {
+        const more = cleanedProducts
+            .filter(p => !filtered.includes(p))
+            .sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+        return filtered.concat(more).slice(0, max);
+    }
+    return filtered;
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
 }
 
 export const sendMessage = async (req, res) => {
     try {
-        const { userId, productId, messages } = req.body;
+        console.log("Received request to /cohere/sendMessage with body:", req.body);
+
+        const { userId, productId, messages, excludedProductIds = [] } = req.body;
         let message = '';
         if (Array.isArray(messages) && messages.length > 0) {
             message = messages[messages.length - 1].content;
         }
 
         let mentioned_product_id_end = [];
+<<<<<<< HEAD
 
         console.log("Messages from frontend:", messages);
 
         // Ưu tiên context từ FE nếu có
+=======
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
         let conversationContext = '';
         if (Array.isArray(messages) && messages.length > 0) {
             conversationContext = messages.map(
                 m => `${m.sender === 'user' ? 'Người dùng' : 'Bot'}: ${m.content}`
             ).join('\n');
         }
+<<<<<<< HEAD
 
         // Cập nhật lịch sử hội thoại với context người dùng
+=======
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
         if (message) {
             chatHistory.push(`Người dùng ${userId ? `(ID: ${userId})` : ''}: ${message}`);
         }
 
         const command = await getCommand();
-        console.log("Command:", command[0].contents);
-
-        // Lấy danh sách file lệnh từ thư mục uploads/commands
         const commandsDir = path.join(__dirname, '../../uploads/commands');
         let files = [];
         if (fs.existsSync(commandsDir)) {
             files = fs.readdirSync(commandsDir).filter(f => !fs.statSync(path.join(commandsDir, f)).isDirectory());
         }
-
-        // Đọc nội dung các file lệnh
         const fileTexts = await Promise.all(
             files.map(async file => {
                 const filePath = path.join(commandsDir, file);
                 const text = await convertFileToText(filePath);
-                if (!text) {
-                    console.log(`⚠️ Không đọc được nội dung file: ${file}`);
-                }
                 return text;
             })
         );
         const fileContext = fileTexts.join("\n");
-        console.log("File context:", fileContext);
 
+<<<<<<< HEAD
         // **THAY ĐỔI CHÍNH: Lấy tất cả sản phẩm một lần**
         const allProducts = await getInforToCohere();
         console.log(`📊 Tổng số sản phẩm trong DB: ${allProducts.length}`);
+=======
+        // Lấy thông tin sản phẩm từ MySQL
+        const products = await getInforToCohere();
+        // console.log("Retrieved products from MySQL:", products);
 
-        // Nếu có userId và productId, có thể lấy thông tin cá nhân hóa
-        let personalizedInfo = '';
-        if (userId || productId) {
-            try {
-                const userProductInfo = await getInforToSuggestQuestions(userId, productId);
-                if (userProductInfo && userProductInfo.length > 0) {
-                    personalizedInfo = `\nThông tin cá nhân hóa cho khách hàng:
-                    - Giới tính: ${userProductInfo[0]?.gender || 'Không xác định'}
-                    - Sản phẩm đã xem/mua: ${userProductInfo.map(p => p.product_name).join(', ')}`;
-                }
-            } catch (error) {
-                console.log("Không thể lấy thông tin cá nhân hóa:", error.message);
-            }
-        }
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
 
+        // --- TỐI ƯU: chỉ lấy sản phẩm liên quan, loại trừ sản phẩm đã gợi ý ---
+        const shouldExclude = isAskForOther(message);
+        const relatedProducts = filterProductsByMessage(
+            products,
+            message,
+            5,
+            shouldExclude ? excludedProductIds : []
+        );
+
+<<<<<<< HEAD
         console.log("Thông tin cá nhân hóa:", personalizedInfo);
 
         // **THAY ĐỔI CHÍNH: Sử dụng semantic search thay vì tất cả sản phẩm**
@@ -319,45 +374,97 @@ Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cả
 Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
 Trả lời ngắn gọn, dưới 200 từ. Nếu câu trả lời quá dài hãy tóm lại để khi hiển thị không bị mất chữ và gây ra mất nghĩa của câu.
 Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
+=======
+        function groupProducts(products) {
+            const grouped = {};
+            products.forEach(p => {
+                const id = p.product_id;
+                if (!grouped[id]) {
+                    grouped[id] = {
+                        product_id: id,
+                        product_name: p.product_name,
+                        brand: p.brand,
+                        category: p.category,
+                        material: p.material,
+                        avg_rating: p.avg_rating,
+                        price: Number(p.price).toFixed(0),
+                        discount: Number(p.discount).toFixed(0),
+                        final_price: Number(p.final_price).toFixed(0),
+                        colors: new Set(),
+                        sizes: new Set(),
+                        description: striptags(p.description || '').replace(/\s+/g, ' ').trim().slice(0, 80) // rút gọn hơn nữa
+                    };
+                }
+                grouped[id].colors.add(p.color);
+                grouped[id].sizes.add(p.size);
+            });
+            return Object.values(grouped).map(p => ({
+                ...p,
+                colors: Array.from(p.colors).join('/'),
+                sizes: Array.from(p.sizes).join('/')
+            }));
+        }
 
-Nếu khách hỏi về chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,... thì:
-- Nếu có dữ liệu liên quan trong phần phía trên (ví dụ: fileContext), hãy trả lời đúng theo dữ liệu đó.
-- Nếu không có dữ liệu nào về vấn đề khách hỏi, hãy hướng dẫn khách liên hệ với nhân viên chăm sóc khách hàng của shop để được hỗ trợ chi tiết.
+        const groupedProducts = groupProducts(relatedProducts);
+        const productInfo = groupedProducts.map(product =>
+            `product_id: ${product.product_id}, product_name: ${product.product_name}, brand: ${product.brand}, category: ${product.category}, material: ${product.material}, avg_rating: ${product.avg_rating || 'Không có'}, price: ${product.price}, discount: ${product.discount}, final_price: ${product.final_price}, colors: ${product.colors}, sizes: ${product.sizes}, quantity: ${product.quantity || 'Không rõ'}, description: ${product.description}`
+        ).join('\n');
 
-Ví dụ: Nếu có điều khoản đổi trả trong dữ liệu, hãy trả lời đúng nội dung đó. Nếu không có, chỉ nói "Bạn vui lòng liên hệ CSKH để biết thêm chi tiết".
+        // Nếu có userId và productId, có thể lấy thông tin cá nhân hóa
+        let personalizedInfo = '';
+        if (userId || productId) {
+            try {
+                const userProductInfo = await getInforToSuggestQuestions(userId, productId);
+                if (userProductInfo && userProductInfo.length > 0) {
+                    personalizedInfo = `\nThông tin cá nhân hóa cho khách hàng:
+                    - Giới tính: ${userProductInfo[0]?.gender || 'Không xác định'}
+                    - Sản phẩm đã xem/mua: ${userProductInfo.map(p => p.product_name).join(', ')}`;
+                }
+            } catch (error) {
+                console.log("Không thể lấy thông tin cá nhân hóa:", error.message);
+            }
+        }
 
-${personalizedInfo}
+        const prompt = `${command[0].contents}
+            ${fileContext}
+            Bạn là chatbot bán quần áo và là 1 nhân viên tư vấn chuyên nghiệp.
+            Do là 1 nhân viên tư vấn chuyên nghiệp nên bạn không chỉ mỗi trả lời câu hỏi của khách hàng mà còn tư vấn các sản phẩm phù hợp với nhu cầu của khách hàng.
+            Hãy đọc hiểu câu hỏi trước khi trả lời bao gồm cả ngữ cảnh hay những thứ liên quan đến câu hỏi.
+            Trả lời niềm nở, thân thiện và chủ động gợi ý hay quảng cáo về sản phẩm.
+            Trả lời ngắn gọn, dưới 200 từ. Nếu câu trả lời quá dài hãy tóm lại để khi hiển thị không bị mất chữ và gây ra mất nghĩa của câu.
+            Chỉ nói về sản phẩm của shop. Nếu không có sản phẩm nào phù hợp với câu hỏi, hãy trả lời rằng không có sản phẩm nào phù hợp.
+            Nếu khách hỏi về chương trình khuyến mãi, thời gian giao hàng, chính sách bảo hành, đổi trả,... thì:
+            - Nếu có dữ liệu liên quan trong phần phía trên (ví dụ: fileContext), hãy trả lời đúng theo dữ liệu đó.
+            - Nếu không có dữ liệu nào về vấn đề khách hỏi, hãy hướng dẫn khách liên hệ với nhân viên chăm sóc khách hàng của shop để được hỗ trợ chi tiết.
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
 
-avg_rating là điểm đánh giá trung bình của sản phẩm, được tính từ 1 đến 5 sao.
+            ${personalizedInfo}
 
-Dữ liệu sản phẩm:  
-${productInfo}
+            avg_rating là điểm đánh giá trung bình của sản phẩm, được tính từ 1 đến 5 sao.
 
-Lịch sử hội thoại:  
-${conversationContext}
+            Dữ liệu sản phẩm:
+            ${productInfo}
 
-Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC chỉ được đánh dấu tên sản phẩm bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM> ... </PRODUCT|ID: ID_SẢN_PHẨM> đúng với ID trong dữ liệu. 
-KHÔNG được tạo bất kỳ tag nào khác như <COLOR|...>, <COLORS>...</COLORS>, <SIZE|...>, <SIZES>...</SIZES>, <BRAND|...> hoặc các tag tương tự.
-Chỉ đánh dấu tag này cho tên sản phẩm, không được đánh dấu cho các thông tin khác như màu sắc, kích thước, chất liệu, v.v.
-Nếu khách hỏi về màu sắc, kích thước, chỉ trả lời dạng văn bản thông thường, KHÔNG dùng tag nào cả.
-Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả.
+            Lịch sử hội thoại:
+            ${conversationContext}
 
-Ví dụ đúng:
-Khách hỏi: "Bạn có áo khoác thông gió không?"
-Trả lời: "<PRODUCT|ID: 80>Áo khoác thông gió a.k.a. AIR-tech jacket AT.02</PRODUCT|ID: 80> là sản phẩm nổi bật với công nghệ AIR-tech™ độc quyền..."
+            Khi nhắc đến bất kỳ sản phẩm nào trong dữ liệu, bạn BẮT BUỘC chỉ được đánh dấu tên sản phẩm bằng cặp tag <PRODUCT|ID: ID_SẢN_PHẨM> ... </PRODUCT|ID: ID_SẢN_PHẨM> đúng với ID trong dữ liệu.
+            KHÔNG được tạo bất kỳ tag nào khác như <COLOR|...>, <COLORS>...</COLORS>, <SIZE|...>, <SIZES>...</SIZES>, <BRAND|...>, <VALUED|FINAL_PRICE> hoặc các tag tương tự.
+            Chỉ đánh dấu tag này cho tên sản phẩm, không được đánh dấu cho các thông tin khác như màu sắc, kích thước, chất liệu, v.v.
+            Nếu khách hỏi về màu sắc, kích thước, chỉ trả lời dạng văn bản thông thường, KHÔNG dùng tag nào cả.
+            Nếu không tìm thấy sản phẩm phù hợp trong dữ liệu, KHÔNG được đánh dấu tag nào cả.
 
-Ví dụ sai (KHÔNG ĐƯỢC dùng):
-- <COLORS>...</COLORS>
-- <SIZES>...</SIZES>
-- <COLOR|...>
-- <SIZE|...>
-
-Câu hỏi: ${message}  
-Trả lời:
+            Câu hỏi: ${message}
+            Trả lời:
         `;
 
+<<<<<<< HEAD
         console.log("Prompt gửi đến Cohere (SendMessage):", prompt);
         console.log("Prompt length:", prompt.length);
+=======
+        console.log("Yêu cầu gửi đến Cohere (SendMessage):", prompt);
+        console.log("Số kí tự gửi đến Cohere", prompt.length);
+>>>>>>> 25266455ea5cc607c508903efcfab39eddef56b0
 
 
         // Gửi yêu cầu đến Cohere
@@ -534,5 +641,19 @@ Cách phối đồ layering như thế nào?`
     };
 
     return suggestions[season] || suggestions.autumn;
+}
+
+function isAskForOther(message) {
+    if (!message) return false;
+    const lower = message.toLowerCase();
+    // Có thể mở rộng thêm các từ khóa khác nếu cần
+    return (
+        lower.includes('khác') ||
+        lower.includes('nữa') ||
+        lower.includes('mới') ||
+        lower.includes('thêm') ||
+        lower.includes('loại khác') ||
+        lower.includes('sản phẩm khác')
+    );
 }
 
