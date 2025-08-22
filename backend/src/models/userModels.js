@@ -1063,144 +1063,298 @@ export const getOrderDetail = (orderId) => {
 };
 
 // Hủy đơn hàng và trả về số lượng sản phẩm
+// export const cancelOrder = (orderId) => {
+//   return new Promise((resolve, reject) => {
+//     console.log("Cancelling order ID:", orderId);
+
+//     // Bắt đầu transaction để đảm bảo tính nhất quán
+//     connection.beginTransaction((transactionErr) => {
+//       if (transactionErr) {
+//         console.error("Transaction error:", transactionErr);
+//         return reject(transactionErr);
+//       }
+
+//       // 1. Kiểm tra trạng thái đơn hàng trước khi hủy
+//       const checkOrderQuery = `
+//         SELECT order_status, customer_id 
+//         FROM orders 
+//         WHERE order_id = ?
+//       `;
+
+//       connection.query(checkOrderQuery, [orderId], (checkErr, orderResults) => {
+//         if (checkErr) {
+//           console.error("Error checking order status:", checkErr);
+//           return connection.rollback(() => {
+//             reject(checkErr);
+//           });
+//         }
+
+//         if (orderResults.length === 0) {
+//           return connection.rollback(() => {
+//             resolve({
+//               success: false,
+//               message: 'Không tìm thấy đơn hàng'
+//             });
+//           });
+//         }
+
+//         const order = orderResults[0];
+
+//         // Chỉ cho phép hủy đơn hàng có trạng thái "Chờ xác nhận"
+//         if (order.order_status !== 'Chờ xác nhận') {
+//           return connection.rollback(() => {
+//             resolve({
+//               success: false,
+//               message: 'Không thể hủy đơn hàng này. Chỉ có thể hủy đơn hàng đang chờ xác nhận.'
+//             });
+//           });
+//         }
+
+//         // 2. Lấy danh sách sản phẩm trong đơn hàng để trả về số lượng
+//         const getOrderItemsQuery = `
+//           SELECT variant_id, quantity 
+//           FROM order_details 
+//           WHERE order_id = ?
+//         `;
+
+//         connection.query(getOrderItemsQuery, [orderId], (itemsErr, itemsResults) => {
+//           if (itemsErr) {
+//             console.error("Error getting order items:", itemsErr);
+//             return connection.rollback(() => {
+//               reject(itemsErr);
+//             });
+//           }
+
+//           if (itemsResults.length === 0) {
+//             return connection.rollback(() => {
+//               resolve({
+//                 success: false,
+//                 message: 'Không tìm thấy sản phẩm trong đơn hàng'
+//               });
+//             });
+//           }
+
+//           // 3. Trả về số lượng cho từng sản phẩm
+//           const restoreQuantityPromises = itemsResults.map(item => {
+//             return new Promise((resolveRestore, rejectRestore) => {
+//               const restoreQuery = `
+//                 UPDATE product_variants 
+//                 SET quantity = quantity + ? 
+//                 WHERE variant_id = ?
+//               `;
+
+//               connection.query(restoreQuery, [item.quantity, item.variant_id], (restoreErr, restoreResult) => {
+//                 if (restoreErr) {
+//                   console.error(`Error restoring quantity for variant ${item.variant_id}:`, restoreErr);
+//                   return rejectRestore(restoreErr);
+//                 }
+
+//                 console.log(`✅ Restored quantity for variant ${item.variant_id}: +${item.quantity}`);
+//                 resolveRestore({
+//                   variant_id: item.variant_id,
+//                   restored_quantity: item.quantity
+//                 });
+//               });
+//             });
+//           });
+
+//           Promise.all(restoreQuantityPromises)
+//             .then((restoreResults) => {
+//               // 4. Cập nhật trạng thái đơn hàng thành "Đã hủy"
+//               const updateOrderQuery = `
+//                 UPDATE orders 
+//                 SET order_status = 'Đã hủy', 
+//                     updated_at = NOW() 
+//                 WHERE order_id = ?
+//               `;
+
+//               connection.query(updateOrderQuery, [orderId], (updateErr, updateResult) => {
+//                 if (updateErr) {
+//                   console.error("Error updating order status:", updateErr);
+//                   return connection.rollback(() => {
+//                     reject(updateErr);
+//                   });
+//                 }
+
+//                 // Commit transaction nếu tất cả đều thành công
+//                 connection.commit((commitErr) => {
+//                   if (commitErr) {
+//                     console.error("Commit error:", commitErr);
+//                     return connection.rollback(() => {
+//                       reject(commitErr);
+//                     });
+//                   }
+
+//                   console.log(`✅ Order ${orderId} cancelled successfully with quantity restoration`);
+//                   resolve({
+//                     success: true,
+//                     message: 'Hủy đơn hàng thành công và đã hoàn trả số lượng sản phẩm',
+//                     order_id: orderId,
+//                     restored_items: restoreResults
+//                   });
+//                 });
+//               });
+//             })
+//             .catch((restoreErr) => {
+//               console.error("Error restoring quantities:", restoreErr);
+//               connection.rollback(() => {
+//                 reject(restoreErr);
+//               });
+//             });
+//         });
+//       });
+//     });
+//   });
+// };
 export const cancelOrder = (orderId) => {
   return new Promise((resolve, reject) => {
     console.log("Cancelling order ID:", orderId);
 
-    // Bắt đầu transaction để đảm bảo tính nhất quán
-    connection.beginTransaction((transactionErr) => {
-      if (transactionErr) {
-        console.error("Transaction error:", transactionErr);
-        return reject(transactionErr);
-      }
+    // Lấy connection thực tế từ pool
+    connection.getConnection((err, conn) => {
+      if (err) return reject(err);
 
-      // 1. Kiểm tra trạng thái đơn hàng trước khi hủy
-      const checkOrderQuery = `
-        SELECT order_status, customer_id 
-        FROM orders 
-        WHERE order_id = ?
-      `;
-
-      connection.query(checkOrderQuery, [orderId], (checkErr, orderResults) => {
-        if (checkErr) {
-          console.error("Error checking order status:", checkErr);
-          return connection.rollback(() => {
-            reject(checkErr);
-          });
+      conn.beginTransaction((transactionErr) => {
+        if (transactionErr) {
+          conn.release();
+          console.error("Transaction error:", transactionErr);
+          return reject(transactionErr);
         }
 
-        if (orderResults.length === 0) {
-          return connection.rollback(() => {
-            resolve({
-              success: false,
-              message: 'Không tìm thấy đơn hàng'
-            });
-          });
-        }
-
-        const order = orderResults[0];
-
-        // Chỉ cho phép hủy đơn hàng có trạng thái "Chờ xác nhận"
-        if (order.order_status !== 'Chờ xác nhận') {
-          return connection.rollback(() => {
-            resolve({
-              success: false,
-              message: 'Không thể hủy đơn hàng này. Chỉ có thể hủy đơn hàng đang chờ xác nhận.'
-            });
-          });
-        }
-
-        // 2. Lấy danh sách sản phẩm trong đơn hàng để trả về số lượng
-        const getOrderItemsQuery = `
-          SELECT variant_id, quantity 
-          FROM order_details 
+        // 1. Kiểm tra trạng thái đơn hàng trước khi hủy
+        const checkOrderQuery = `
+          SELECT order_status, customer_id 
+          FROM orders 
           WHERE order_id = ?
         `;
 
-        connection.query(getOrderItemsQuery, [orderId], (itemsErr, itemsResults) => {
-          if (itemsErr) {
-            console.error("Error getting order items:", itemsErr);
-            return connection.rollback(() => {
-              reject(itemsErr);
+        conn.query(checkOrderQuery, [orderId], (checkErr, orderResults) => {
+          if (checkErr) {
+            console.error("Error checking order status:", checkErr);
+            return conn.rollback(() => {
+              conn.release();
+              reject(checkErr);
             });
           }
 
-          if (itemsResults.length === 0) {
-            return connection.rollback(() => {
+          if (orderResults.length === 0) {
+            return conn.rollback(() => {
+              conn.release();
               resolve({
                 success: false,
-                message: 'Không tìm thấy sản phẩm trong đơn hàng'
+                message: 'Không tìm thấy đơn hàng'
               });
             });
           }
 
-          // 3. Trả về số lượng cho từng sản phẩm
-          const restoreQuantityPromises = itemsResults.map(item => {
-            return new Promise((resolveRestore, rejectRestore) => {
-              const restoreQuery = `
-                UPDATE product_variants 
-                SET quantity = quantity + ? 
-                WHERE variant_id = ?
-              `;
+          const order = orderResults[0];
 
-              connection.query(restoreQuery, [item.quantity, item.variant_id], (restoreErr, restoreResult) => {
-                if (restoreErr) {
-                  console.error(`Error restoring quantity for variant ${item.variant_id}:`, restoreErr);
-                  return rejectRestore(restoreErr);
-                }
+          // Chỉ cho phép hủy đơn hàng có trạng thái "Chờ xác nhận"
+          if (order.order_status !== 'Chờ xác nhận') {
+            return conn.rollback(() => {
+              conn.release();
+              resolve({
+                success: false,
+                message: 'Không thể hủy đơn hàng này. Chỉ có thể hủy đơn hàng đang chờ xác nhận.'
+              });
+            });
+          }
 
-                console.log(`✅ Restored quantity for variant ${item.variant_id}: +${item.quantity}`);
-                resolveRestore({
-                  variant_id: item.variant_id,
-                  restored_quantity: item.quantity
+          // 2. Lấy danh sách sản phẩm trong đơn hàng để trả về số lượng
+          const getOrderItemsQuery = `
+            SELECT variant_id, quantity 
+            FROM order_details 
+            WHERE order_id = ?
+          `;
+
+          conn.query(getOrderItemsQuery, [orderId], (itemsErr, itemsResults) => {
+            if (itemsErr) {
+              console.error("Error getting order items:", itemsErr);
+              return conn.rollback(() => {
+                conn.release();
+                reject(itemsErr);
+              });
+            }
+
+            if (itemsResults.length === 0) {
+              return conn.rollback(() => {
+                conn.release();
+                resolve({
+                  success: false,
+                  message: 'Không tìm thấy sản phẩm trong đơn hàng'
+                });
+              });
+            }
+
+            // 3. Trả về số lượng cho từng sản phẩm
+            const restoreQuantityPromises = itemsResults.map(item => {
+              return new Promise((resolveRestore, rejectRestore) => {
+                const restoreQuery = `
+                  UPDATE product_variants 
+                  SET quantity = quantity + ? 
+                  WHERE variant_id = ?
+                `;
+
+                conn.query(restoreQuery, [item.quantity, item.variant_id], (restoreErr, restoreResult) => {
+                  if (restoreErr) {
+                    console.error(`Error restoring quantity for variant ${item.variant_id}:`, restoreErr);
+                    return rejectRestore(restoreErr);
+                  }
+
+                  console.log(`✅ Restored quantity for variant ${item.variant_id}: +${item.quantity}`);
+                  resolveRestore({
+                    variant_id: item.variant_id,
+                    restored_quantity: item.quantity
+                  });
                 });
               });
             });
-          });
 
-          Promise.all(restoreQuantityPromises)
-            .then((restoreResults) => {
-              // 4. Cập nhật trạng thái đơn hàng thành "Đã hủy"
-              const updateOrderQuery = `
-                UPDATE orders 
-                SET order_status = 'Đã hủy', 
-                    updated_at = NOW() 
-                WHERE order_id = ?
-              `;
+            Promise.all(restoreQuantityPromises)
+              .then((restoreResults) => {
+                // 4. Cập nhật trạng thái đơn hàng thành "Đã hủy"
+                const updateOrderQuery = `
+                  UPDATE orders 
+                  SET order_status = 'Đã hủy', 
+                      updated_at = NOW() 
+                  WHERE order_id = ?
+                `;
 
-              connection.query(updateOrderQuery, [orderId], (updateErr, updateResult) => {
-                if (updateErr) {
-                  console.error("Error updating order status:", updateErr);
-                  return connection.rollback(() => {
-                    reject(updateErr);
-                  });
-                }
-
-                // Commit transaction nếu tất cả đều thành công
-                connection.commit((commitErr) => {
-                  if (commitErr) {
-                    console.error("Commit error:", commitErr);
-                    return connection.rollback(() => {
-                      reject(commitErr);
+                conn.query(updateOrderQuery, [orderId], (updateErr, updateResult) => {
+                  if (updateErr) {
+                    console.error("Error updating order status:", updateErr);
+                    return conn.rollback(() => {
+                      conn.release();
+                      reject(updateErr);
                     });
                   }
 
-                  console.log(`✅ Order ${orderId} cancelled successfully with quantity restoration`);
-                  resolve({
-                    success: true,
-                    message: 'Hủy đơn hàng thành công và đã hoàn trả số lượng sản phẩm',
-                    order_id: orderId,
-                    restored_items: restoreResults
+                  // Commit transaction nếu tất cả đều thành công
+                  conn.commit((commitErr) => {
+                    conn.release();
+                    if (commitErr) {
+                      console.error("Commit error:", commitErr);
+                      return reject(commitErr);
+                    }
+
+                    console.log(`✅ Order ${orderId} cancelled successfully with quantity restoration`);
+                    resolve({
+                      success: true,
+                      message: 'Hủy đơn hàng thành công và đã hoàn trả số lượng sản phẩm',
+                      order_id: orderId,
+                      restored_items: restoreResults
+                    });
                   });
                 });
+              })
+              .catch((restoreErr) => {
+                console.error("Error restoring quantities:", restoreErr);
+                conn.rollback(() => {
+                  conn.release();
+                  reject(restoreErr);
+                });
               });
-            })
-            .catch((restoreErr) => {
-              console.error("Error restoring quantities:", restoreErr);
-              connection.rollback(() => {
-                reject(restoreErr);
-              });
-            });
+          });
         });
       });
     });

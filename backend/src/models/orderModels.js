@@ -716,8 +716,96 @@ export const updateOrderAfterPayment = (orderId, paymentStatus = 'Đã thanh to�
 };
 
 // Hủy đơn hàng tạm thời (xóa đơn hàng chưa thanh toán)
+// export const cancelTempOrder = (orderId) => {
+//     return new Promise((resolve, reject) => {
+//         connection.getConnection((err, conn) => {
+//             if (err) return reject(err);
+
+//             conn.beginTransaction((err) => {
+//                 if (err) {
+//                     conn.release();
+//                     return reject(err);
+//                 }
+
+//                 try {
+//                     const checkOrderQuery = `
+//                         SELECT order_id, payment_status, order_status 
+//                         FROM orders 
+//                         WHERE order_id = ?
+//                     `;
+//                     conn.query(checkOrderQuery, [orderId], (err, orderResult) => {
+//                         if (err) {
+//                             return conn.rollback(() => {
+//                                 conn.release();
+//                                 reject(err);
+//                             });
+//                         }
+//                         if (orderResult.length === 0) {
+//                             return conn.rollback(() => {
+//                                 conn.release();
+//                                 reject(new Error('Không tìm thấy đơn hàng'));
+//                             });
+//                         }
+//                         const order = orderResult[0];
+//                         if (order.payment_status === 'Đã thanh toán') {
+//                             return conn.rollback(() => {
+//                                 conn.release();
+//                                 reject(new Error('Không thể hủy đơn hàng đã thanh toán'));
+//                             });
+//                         }
+//                         const deleteOrderDetailsQuery = `
+//                             DELETE FROM order_details 
+//                             WHERE order_id = ?
+//                         `;
+//                         conn.query(deleteOrderDetailsQuery, [orderId], (err, detailResult) => {
+//                             if (err) {
+//                                 return conn.rollback(() => {
+//                                     conn.release();
+//                                     reject(err);
+//                                 });
+//                             }
+//                             const deleteOrderQuery = `
+//                                 DELETE FROM orders 
+//                                 WHERE order_id = ?
+//                             `;
+//                             conn.query(deleteOrderQuery, [orderId], (err, orderDeleteResult) => {
+//                                 if (err) {
+//                                     return conn.rollback(() => {
+//                                         conn.release();
+//                                         reject(err);
+//                                     });
+//                                 }
+//                                 if (orderDeleteResult.affectedRows === 0) {
+//                                     return conn.rollback(() => {
+//                                         conn.release();
+//                                         reject(new Error('Không thể xóa đơn hàng'));
+//                                     });
+//                                 }
+//                                 conn.commit((err) => {
+//                                     conn.release();
+//                                     if (err) return reject(err);
+//                                     resolve({
+//                                         success: true,
+//                                         message: 'Hủy đơn hàng tạm thời thành công',
+//                                         orderId: orderId
+//                                     });
+//                                 });
+//                             });
+//                         });
+//                     });
+//                 } catch (error) {
+//                     conn.rollback(() => {
+//                         conn.release();
+//                         reject(error);
+//                     });
+//                 }
+//             });
+//         });
+//     });
+// };
 export const cancelTempOrder = (orderId) => {
     return new Promise((resolve, reject) => {
+        // Lấy connection thực tế từ pool
         connection.getConnection((err, conn) => {
             if (err) return reject(err);
 
