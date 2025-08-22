@@ -21,6 +21,10 @@ export const getFullImageUrl = (imagePath) => {
         return `${baseUrl}/${imagePath}`;
     }
 
+    if (imagePath.startsWith('public/')) {
+        return `/${imagePath.replace(/^public\//, '')}`;
+    }
+
     // Nếu là ảnh mặc định
     if (imagePath.startsWith('/images/')) {
         return imagePath;

@@ -37,6 +37,9 @@ async function convertFileToText(filePath) {
 
 // Hàm tính cosine similarity
 function cosineSimilarity(vecA, vecB) {
+    // console.log("vecA: ", vecA);
+    // console.log("vecB: ", vecB);
+
     if (vecA.length !== vecB.length) return 0;
 
     let dotProduct = 0;
@@ -49,6 +52,10 @@ function cosineSimilarity(vecA, vecB) {
         normB += vecB[i] * vecB[i];
     }
 
+    // console.log("Dot product:", dotProduct);
+    // console.log("Norm A:", Math.sqrt(normA));
+    // console.log("Norm B:", Math.sqrt(normB));
+
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
@@ -56,7 +63,7 @@ function cosineSimilarity(vecA, vecB) {
 async function createProductEmbedding(product) {
     const productText = `${product.product_name} ${product.brand} ${product.category} ${product.material} ${striptags(product.description || '')}`;
 
-    // console.log("Product text:", productText);
+    // console.log("Tạo embedding cho:", productText);
 
     // console.log("Product text:", productText.length);
 
@@ -66,7 +73,9 @@ async function createProductEmbedding(product) {
             model: 'embed-multilingual-v3.0',
             input_type: 'search_document'
         });
-        // console.log("Cohere response:", response);
+
+
+        // console.log("Nội dung embedding:", response);
 
         // console.log("Cohere response:", response.embeddings[0].length);
 
@@ -90,9 +99,8 @@ async function searchRelevantProducts(query, allProducts, limit = 8) {
             input_type: 'search_query'
         });
 
-        console.log(`🔍 Đã tạo embedding cho query: "${query}"`);
-        console.log("nội dung embedding:", queryEmbeddingResponse);
-
+        // console.log(`Tạo embedding cho: "${query}"`);
+        // console.log("Nội dung embedding:", queryEmbeddingResponse);
 
         const queryEmbedding = queryEmbeddingResponse.embeddings[0];
 
@@ -132,6 +140,9 @@ async function searchRelevantProducts(query, allProducts, limit = 8) {
             }
         }
 
+        console.log("productSimilarities:", productSimilarities);
+
+
         // 4. Sắp xếp theo độ tương đồng và lấy top results
         const topProducts = productSimilarities
             .sort((a, b) => b.similarity - a.similarity)
@@ -140,8 +151,8 @@ async function searchRelevantProducts(query, allProducts, limit = 8) {
                 console.log(`📈 ${item.product.product_name}: ${(item.similarity * 100).toFixed(1)}% similarity`);
                 return item.product;
             });
-
-        console.log(`✅ Tìm thấy ${topProducts.length} sản phẩm liên quan`);
+        console.log("Top products:", topProducts);
+        // console.log(`✅ Tìm thấy ${topProducts.length} sản phẩm liên quan`);
         return topProducts;
 
     } catch (error) {
